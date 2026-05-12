@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "972810750283",
+    "project_id": "cao-binado",
+    "storage_bucket": "cao-binado.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:972810750283:android:58153fdc7149b4d3b640ce",
+        "android_client_info": {
+          "package_name": "com.example.cao_binado"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA_MDmP8pUwgNXfEzE8c9pgCiSxsEsVRw0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,69 @@
+name: cao_binado
+description: "Cãobinado - App de adoção de animais"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.9.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+  # State Management
+  mobx: ^2.4.0
+  flutter_mobx: ^2.2.1
+  flutter_bloc: ^8.1.6
+
+  # Dependency Injection
+  get_it: ^8.0.3
+
+  # Navigation
+  go_router: ^14.6.2
+
+  # Fonts
+  google_fonts: ^6.2.1
+
+  # Firebase
+  firebase_core: ^3.6.0
+  firebase_auth: ^5.3.1
+  cloud_firestore: ^5.4.3
+
+  # Media
+  image_picker: ^1.1.2
+
+  # HTTP (usado pelo CloudinaryStorageService)
+  http: ^1.2.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^5.0.0
+
+  # Code generation
+  build_runner: ^2.4.13
+  mobx_codegen: ^2.6.1
+
+  # App icon generation
+  flutter_launcher_icons: ^0.14.1
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/icon/
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icon/app_icon.png"
+  remove_alpha_ios: true
+  background_color_ios: "#FFFFFF"
+  web:
+    generate: true
+    image_path: "assets/icon/app_icon.png"
+    background_color: "#FFFFFF"
+    theme_color: "#FFFFFF"
