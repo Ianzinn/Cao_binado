@@ -5,6 +5,7 @@ import 'package:mobx/mobx.dart';
 import '../../../../domain/models/user_model.dart';
 import '../../../../domain/repositories/user_repository.dart';
 import '../../../../core/services/auth_service.dart';
+import '../../../../core/services/biometric_service.dart';
 
 part 'auth_store.g.dart';
 
@@ -30,6 +31,26 @@ abstract class _AuthStore with Store {
 
   @observable
   String? errorMessage;
+
+  String? _pendingBiometricEmail;
+  String? _pendingBiometricPassword;
+
+  BiometricCredentials? get pendingBiometricCredentials {
+    final e = _pendingBiometricEmail;
+    final p = _pendingBiometricPassword;
+    if (e == null || p == null) return null;
+    return BiometricCredentials(email: e, password: p);
+  }
+
+  void rememberPendingBiometric(String email, String password) {
+    _pendingBiometricEmail = email;
+    _pendingBiometricPassword = password;
+  }
+
+  void clearPendingBiometricCredentials() {
+    _pendingBiometricEmail = null;
+    _pendingBiometricPassword = null;
+  }
 
   @computed
   bool get isAuthenticated => firebaseUser != null;
@@ -104,7 +125,25 @@ abstract class _AuthStore with Store {
   }
 
   @action
-  Future<void> logout() => _authService.signOut();
+  Future<bool> sendPasswordReset(String email) async {
+    isLoading = true;
+    errorMessage = null;
+    try {
+      await _authService.sendPasswordResetEmail(email.trim());
+      return true;
+    } on FirebaseAuthException catch (e) {
+      errorMessage = _mapError(e.code);
+      return false;
+    } finally {
+      isLoading = false;
+    }
+  }
+
+  @action
+  Future<void> logout() {
+    clearPendingBiometricCredentials();
+    return _authService.signOut();
+  }
 
   @action
   Future<void> updateProfilePhoto(String url) async {

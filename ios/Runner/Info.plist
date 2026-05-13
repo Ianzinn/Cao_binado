@@ -51,5 +51,7 @@
 	<string>Precisamos acessar sua câmera para tirar fotos dos pets.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Precisamos salvar fotos dos pets na sua galeria.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Usamos Face ID para você entrar no app de forma rápida e segura.</string>
 </dict>
 </plist>

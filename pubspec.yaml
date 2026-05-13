@@ -38,6 +38,10 @@ dependencies:
   # HTTP (usado pelo CloudinaryStorageService)
   http: ^1.2.2
 
+  # Biometric authentication
+  local_auth: ^2.3.0
+  flutter_secure_storage: ^9.2.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

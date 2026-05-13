@@ -53,53 +53,24 @@ class _OnboardingPageState extends State<OnboardingPage> {
           child: Column(
             children: [
               const SizedBox(height: 40),
-              Container(
-                width: 220,
-                height: 220,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF5EDD6),
-                  borderRadius: BorderRadius.circular(AppRadius.card),
-                  border: Border.all(color: const Color(0xFFD4A853), width: 1.5),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Cã',
-                          style: GoogleFonts.poppins(
-                            fontSize: 26,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                        const Text('🐾', style: TextStyle(fontSize: 22)),
-                        Text(
-                          'binado',
-                          style: GoogleFonts.poppins(
-                            fontSize: 26,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    const Text('🐶 🐱 🐶', style: TextStyle(fontSize: 56)),
-                    const SizedBox(height: 8),
-                    Text(
-                      page.subtitle,
-                      style: GoogleFonts.poppins(
-                        fontSize: 13,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
+              ClipRRect(
+                borderRadius: BorderRadius.circular(AppRadius.card),
+                child: Image.asset(
+                  'assets/icon/app_icon.png',
+                  width: 220,
+                  height: 220,
+                  fit: BoxFit.cover,
                 ),
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 16),
+              Text(
+                page.subtitle,
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 24),
               Text(
                 page.description,
                 style: GoogleFonts.poppins(

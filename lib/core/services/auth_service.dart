@@ -7,6 +7,7 @@ abstract class AuthService {
       String email, String password);
   Future<UserCredential> createUserWithEmailAndPassword(
       String email, String password);
+  Future<void> sendPasswordResetEmail(String email);
   Future<void> signOut();
 }
 
@@ -30,6 +31,10 @@ class FirebaseAuthService implements AuthService {
   Future<UserCredential> createUserWithEmailAndPassword(
           String email, String password) =>
       _auth.createUserWithEmailAndPassword(email: email, password: password);
+
+  @override
+  Future<void> sendPasswordResetEmail(String email) =>
+      _auth.sendPasswordResetEmail(email: email);
 
   @override
   Future<void> signOut() => _auth.signOut();

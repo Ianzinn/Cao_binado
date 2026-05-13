@@ -30,6 +30,14 @@ mixin _$LoginStore on _LoginStore, Store {
     () => super.isFormValid,
     name: '_LoginStore.isFormValid',
   )).value;
+  Computed<bool>? _$canLoginWithBiometricComputed;
+
+  @override
+  bool get canLoginWithBiometric =>
+      (_$canLoginWithBiometricComputed ??= Computed<bool>(
+        () => super.canLoginWithBiometric,
+        name: '_LoginStore.canLoginWithBiometric',
+      )).value;
 
   late final _$emailAtom = Atom(name: '_LoginStore.email', context: context);
 
@@ -82,6 +90,42 @@ mixin _$LoginStore on _LoginStore, Store {
     });
   }
 
+  late final _$biometricSupportedAtom = Atom(
+    name: '_LoginStore.biometricSupported',
+    context: context,
+  );
+
+  @override
+  bool get biometricSupported {
+    _$biometricSupportedAtom.reportRead();
+    return super.biometricSupported;
+  }
+
+  @override
+  set biometricSupported(bool value) {
+    _$biometricSupportedAtom.reportWrite(value, super.biometricSupported, () {
+      super.biometricSupported = value;
+    });
+  }
+
+  late final _$biometricEnabledAtom = Atom(
+    name: '_LoginStore.biometricEnabled',
+    context: context,
+  );
+
+  @override
+  bool get biometricEnabled {
+    _$biometricEnabledAtom.reportRead();
+    return super.biometricEnabled;
+  }
+
+  @override
+  set biometricEnabled(bool value) {
+    _$biometricEnabledAtom.reportWrite(value, super.biometricEnabled, () {
+      super.biometricEnabled = value;
+    });
+  }
+
   late final _$_LoginStoreActionController = ActionController(
     name: '_LoginStore',
     context: context,
@@ -129,9 +173,12 @@ mixin _$LoginStore on _LoginStore, Store {
 email: ${email},
 password: ${password},
 isPasswordVisible: ${isPasswordVisible},
+biometricSupported: ${biometricSupported},
+biometricEnabled: ${biometricEnabled},
 isLoading: ${isLoading},
 errorMessage: ${errorMessage},
-isFormValid: ${isFormValid}
+isFormValid: ${isFormValid},
+canLoginWithBiometric: ${canLoginWithBiometric}
     ''';
   }
 }

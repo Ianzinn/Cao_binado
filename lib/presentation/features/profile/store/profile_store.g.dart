@@ -31,6 +31,42 @@ mixin _$ProfileStore on _ProfileStore, Store {
     name: '_ProfileStore.fotoPerfilUrl',
   )).value;
 
+  late final _$biometricSupportedAtom = Atom(
+    name: '_ProfileStore.biometricSupported',
+    context: context,
+  );
+
+  @override
+  bool get biometricSupported {
+    _$biometricSupportedAtom.reportRead();
+    return super.biometricSupported;
+  }
+
+  @override
+  set biometricSupported(bool value) {
+    _$biometricSupportedAtom.reportWrite(value, super.biometricSupported, () {
+      super.biometricSupported = value;
+    });
+  }
+
+  late final _$biometricEnabledAtom = Atom(
+    name: '_ProfileStore.biometricEnabled',
+    context: context,
+  );
+
+  @override
+  bool get biometricEnabled {
+    _$biometricEnabledAtom.reportRead();
+    return super.biometricEnabled;
+  }
+
+  @override
+  set biometricEnabled(bool value) {
+    _$biometricEnabledAtom.reportWrite(value, super.biometricEnabled, () {
+      super.biometricEnabled = value;
+    });
+  }
+
   late final _$appVersionAtom = Atom(
     name: '_ProfileStore.appVersion',
     context: context,
@@ -67,6 +103,16 @@ mixin _$ProfileStore on _ProfileStore, Store {
     });
   }
 
+  late final _$disableBiometricAsyncAction = AsyncAction(
+    '_ProfileStore.disableBiometric',
+    context: context,
+  );
+
+  @override
+  Future<void> disableBiometric() {
+    return _$disableBiometricAsyncAction.run(() => super.disableBiometric());
+  }
+
   late final _$pickAndUpdatePhotoAsyncAction = AsyncAction(
     '_ProfileStore.pickAndUpdatePhoto',
     context: context,
@@ -92,6 +138,8 @@ mixin _$ProfileStore on _ProfileStore, Store {
   @override
   String toString() {
     return '''
+biometricSupported: ${biometricSupported},
+biometricEnabled: ${biometricEnabled},
 appVersion: ${appVersion},
 isLoading: ${isLoading},
 userName: ${userName},

@@ -117,6 +117,28 @@ class _ProfilePageState extends State<ProfilePage> {
                     label: 'Histórico',
                     onTap: () => context.go('/history'),
                   ),
+                  if (_store.biometricSupported) ...[
+                    const Divider(height: 1, color: AppColors.divider),
+                    _MenuItem(
+                      icon: Icons.fingerprint,
+                      label: _store.biometricEnabled
+                          ? 'Desativar login por biometria'
+                          : 'Biometria não ativada',
+                      onTap: _store.biometricEnabled
+                          ? () async {
+                              await _store.disableBiometric();
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                        'Login por biometria desativado.'),
+                                  ),
+                                );
+                              }
+                            }
+                          : () {},
+                    ),
+                  ],
                 ],
               ),
             ),

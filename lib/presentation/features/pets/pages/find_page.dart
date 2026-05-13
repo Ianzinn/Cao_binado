@@ -36,6 +36,34 @@ class _FindPageState extends State<FindPage> {
           if (_store.isLoading && _store.pets.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }
+          if (_store.errorMessage != null) {
+            return Padding(
+              padding: const EdgeInsets.all(24),
+              child: Center(
+                child: SingleChildScrollView(
+                  child: Text(
+                    _store.errorMessage!,
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      color: Colors.redAccent,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            );
+          }
+          if (_store.pets.isEmpty) {
+            return Center(
+              child: Text(
+                'Nenhum pet disponível no momento.',
+                style: GoogleFonts.poppins(
+                  fontSize: 15,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            );
+          }
           return ListView.separated(
             padding: const EdgeInsets.all(16),
             itemCount: _store.pets.length,

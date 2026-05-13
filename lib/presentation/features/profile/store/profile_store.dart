@@ -2,6 +2,7 @@
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:mobx/mobx.dart';
+import '../../../../core/services/biometric_service.dart';
 import '../../../../domain/repositories/storage_repository.dart';
 import '../../auth/store/auth_store.dart';
 
@@ -10,11 +11,35 @@ part 'profile_store.g.dart';
 class ProfileStore = _ProfileStore with _$ProfileStore;
 
 abstract class _ProfileStore with Store {
-  _ProfileStore(this._authStore, this._storageRepository);
+  _ProfileStore(this._authStore, this._storageRepository, this._biometric) {
+    _loadBiometricState();
+  }
 
   final AuthStore _authStore;
   final StorageRepository _storageRepository;
+  final BiometricService _biometric;
   final _picker = ImagePicker();
+
+  @observable
+  bool biometricSupported = false;
+
+  @observable
+  bool biometricEnabled = false;
+
+  Future<void> _loadBiometricState() async {
+    final supported = await _biometric.isDeviceSupported();
+    final enabled = await _biometric.isEnabled();
+    runInAction(() {
+      biometricSupported = supported;
+      biometricEnabled = enabled;
+    });
+  }
+
+  @action
+  Future<void> disableBiometric() async {
+    await _biometric.disable();
+    biometricEnabled = false;
+  }
 
   @computed
   String get userName => _authStore.displayName;
@@ -56,6 +81,11 @@ abstract class _ProfileStore with Store {
   Future<void> logout() async {
     isLoading = true;
     try {
+      // Limpa credenciais biométricas no logout explícito para evitar que o
+      // próximo launch reentre automaticamente com a mesma sessão.
+      // Sessão expirada (Firebase) NÃO passa por aqui, então mantém biometria.
+      await _biometric.disable();
+      biometricEnabled = false;
       await _authStore.logout();
     } finally {
       isLoading = false;

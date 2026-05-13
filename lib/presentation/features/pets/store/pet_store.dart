@@ -50,6 +50,7 @@ abstract class _PetStore with Store {
         .getPetsStream(especie: especieFilter, porte: porteFilter)
         .listen(
       (list) {
+        debugPrint('🐾 PetStore.loadPets received ${list.length} pets');
         runInAction(() {
           pets
             ..clear()
@@ -57,9 +58,10 @@ abstract class _PetStore with Store {
           isLoading = false;
         });
       },
-      onError: (_) {
+      onError: (e, st) {
+        debugPrint('❌ PetStore.loadPets error: $e\n$st');
         runInAction(() {
-          errorMessage = 'Erro ao carregar pets.';
+          errorMessage = 'Erro ao carregar pets: $e';
           isLoading = false;
         });
       },

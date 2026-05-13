@@ -1,63 +1,83 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../../core/di/injection.dart';
+import '../../../../core/services/biometric_service.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../auth/store/auth_store.dart';
 
-class SplashPage extends StatelessWidget {
+class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
 
   @override
+  State<SplashPage> createState() => _SplashPageState();
+}
+
+class _SplashPageState extends State<SplashPage> {
+  bool _decided = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _decideRoute());
+  }
+
+  Future<void> _decideRoute() async {
+    final biometric = getIt<BiometricService>();
+    final auth = getIt<AuthStore>();
+
+    // 1ª abertura do app: dispara o consent biométrico do SO (iOS Face ID).
+    // Apenas pede a permissão — não ativa o login biométrico.
+    await biometric.requestPermissionIfNeeded();
+
+    if (await biometric.isEnabled()) {
+      if (mounted) context.go('/login');
+      return;
+    }
+    if (auth.isAuthenticated) {
+      if (mounted) context.go('/home');
+      return;
+    }
+    if (mounted) setState(() => _decided = true);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (!_decided) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
-            const SizedBox(height: 40),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Cã',
-                  style: GoogleFonts.poppins(
-                    fontSize: 48,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-                const Text('🐾', style: TextStyle(fontSize: 44)),
-                Text(
-                  'binado',
-                  style: GoogleFonts.poppins(
-                    fontSize: 48,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                ),
-              ],
-            ),
+            const SizedBox(height: 32),
+            const _CaobinadoTitle(),
             const Spacer(),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Image.network(
-                'https://www.figma.com/api/mcp/asset/219c1bb1-de44-4a51-a801-de15e2e83cf5',
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Image.asset(
+                'assets/icon/pets.png',
                 height: 260,
                 fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) => const _PetsIllustration(),
               ),
             ),
             const Spacer(),
             Text(
               'Seja bem-vindo!',
               style: GoogleFonts.poppins(
-                fontSize: 32,
+                fontSize: 36,
                 fontWeight: FontWeight.bold,
                 color: Colors.black,
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 32),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 28),
               child: _SplashButton(
@@ -65,7 +85,7 @@ class SplashPage extends StatelessWidget {
                 onTap: () => context.go('/onboarding'),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 28),
               child: _SplashButton(
@@ -73,10 +93,42 @@ class SplashPage extends StatelessWidget {
                 onTap: () => context.go('/login'),
               ),
             ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 32),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _CaobinadoTitle extends StatelessWidget {
+  const _CaobinadoTitle();
+
+  @override
+  Widget build(BuildContext context) {
+    final titleStyle = GoogleFonts.poppins(
+      fontSize: 48,
+      fontWeight: FontWeight.bold,
+      color: Colors.black,
+    );
+    return Stack(
+      clipBehavior: Clip.none,
+      alignment: Alignment.center,
+      children: [
+        Text('Cãobinado', style: titleStyle),
+        Positioned(
+          top: -12,
+          left: MediaQuery.of(context).size.width / 2 + 38,
+          child: Transform.rotate(
+            angle: -22.15 * math.pi / 180,
+            child: Image.asset(
+              'assets/icon/paw.png',
+              width: 26,
+              height: 26,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -94,12 +146,12 @@ class _SplashButton extends StatelessWidget {
         width: double.infinity,
         height: 60,
         decoration: BoxDecoration(
-          color: AppColors.primary,
-          borderRadius: BorderRadius.circular(AppRadius.buttonSocial),
-          boxShadow: [
+          color: const Color(0xFF3C3333),
+          borderRadius: BorderRadius.circular(99),
+          boxShadow: const [
             BoxShadow(
-              color: const Color(0x4D95ADFE),
-              offset: const Offset(0, 2),
+              color: Color(0x4D95ADFE),
+              offset: Offset(0, 2),
               blurRadius: 20,
             ),
           ],
@@ -113,24 +165,6 @@ class _SplashButton extends StatelessWidget {
             color: Colors.white,
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _PetsIllustration extends StatelessWidget {
-  const _PetsIllustration();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 260,
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppRadius.card),
-      ),
-      child: const Center(
-        child: Text('🐶 🐱 🐶', style: TextStyle(fontSize: 80)),
       ),
     );
   }

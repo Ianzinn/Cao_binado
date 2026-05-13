@@ -3,6 +3,7 @@ import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/services/biometric_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../store/login_store.dart';
 
@@ -18,10 +19,14 @@ class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
+  bool _autoTriggered = false;
+  bool _isBiometricRunning = false;
+
   @override
   void initState() {
     super.initState();
     _store = getIt<LoginStore>();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeAutoBiometric());
   }
 
   @override
@@ -31,10 +36,55 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
+  Future<void> _maybeAutoBiometric() async {
+    if (_autoTriggered) return;
+    _autoTriggered = true;
+    final biometric = getIt<BiometricService>();
+    final enabled = await biometric.isEnabled();
+    debugPrint('🔐 LoginPage auto-trigger: biometric.isEnabled=$enabled');
+    if (!enabled) return;
+    await _runBiometric();
+  }
+
+  Future<void> _runBiometric() async {
+    if (_isBiometricRunning) return;
+    setState(() => _isBiometricRunning = true);
+    try {
+      final success = await _store.loginWithBiometric();
+      if (success && mounted) context.go('/home');
+    } finally {
+      if (mounted) setState(() => _isBiometricRunning = false);
+    }
+  }
+
   Future<void> _handleLogin() async {
     final success = await _store.login();
-    if (success && mounted) {
-      context.go('/home');
+    if (success && mounted) context.go('/home');
+  }
+
+  Future<void> _handleForgotPassword() async {
+    final email = await showDialog<String>(
+      context: context,
+      builder: (_) => _ForgotPasswordDialog(initialEmail: _emailController.text),
+    );
+    if (email == null || email.isEmpty) return;
+
+    final success = await _store.sendPasswordReset(email);
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    if (success) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('E-mail de recuperação enviado para $email.'),
+        ),
+      );
+    } else {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(_store.errorMessage ?? 'Não foi possível enviar o e-mail.'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
     }
   }
 
@@ -99,7 +149,7 @@ class _LoginPageState extends State<LoginPage> {
               const SizedBox(height: 20),
               Center(
                 child: GestureDetector(
-                  onTap: () {/* TODO: esqueci senha */},
+                  onTap: _handleForgotPassword,
                   child: Text(
                     'Esqueceu sua senha?',
                     style: GoogleFonts.poppins(
@@ -393,5 +443,71 @@ class _GoogleIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Icon(Icons.g_mobiledata_rounded, size: 28, color: Color(0xFF4285F4));
+  }
+}
+
+class _ForgotPasswordDialog extends StatefulWidget {
+  const _ForgotPasswordDialog({required this.initialEmail});
+
+  final String initialEmail;
+
+  @override
+  State<_ForgotPasswordDialog> createState() => _ForgotPasswordDialogState();
+}
+
+class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialEmail);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      scrollable: true,
+      title: Text(
+        'Recuperar senha',
+        style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Informe seu e-mail. Enviaremos um link para redefinir sua senha.',
+            style: GoogleFonts.poppins(fontSize: 13),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _controller,
+            autofocus: true,
+            keyboardType: TextInputType.emailAddress,
+            decoration: const InputDecoration(
+              hintText: 'E-mail',
+              border: OutlineInputBorder(),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancelar'),
+        ),
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(_controller.text.trim()),
+          child: const Text('Enviar'),
+        ),
+      ],
+    );
   }
 }

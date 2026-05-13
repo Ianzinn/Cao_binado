@@ -2,6 +2,7 @@ import 'package:get_it/get_it.dart';
 
 // Core
 import '../services/auth_service.dart';
+import '../services/biometric_service.dart';
 
 // Domain — repository interfaces
 import '../../domain/repositories/user_repository.dart';
@@ -48,6 +49,7 @@ final GetIt getIt = GetIt.instance;
 void setupInjection() {
   // ── Core services ──────────────────────────────────────────────────────────
   getIt.registerLazySingleton<AuthService>(() => FirebaseAuthService());
+  getIt.registerLazySingleton<BiometricService>(() => BiometricService());
 
   // ── Remote datasources ─────────────────────────────────────────────────────
   getIt.registerLazySingleton<UserRemoteDatasource>(
@@ -81,7 +83,7 @@ void setupInjection() {
 
   // ── Page-scoped stores (new instance per page) ────────────────────────────
   getIt.registerFactory<LoginStore>(
-    () => LoginStore(getIt<AuthStore>()),
+    () => LoginStore(getIt<AuthStore>(), getIt<BiometricService>()),
   );
   getIt.registerFactory<RegisterStore>(
     () => RegisterStore(getIt<AuthStore>(), getIt<StorageRepository>()),
@@ -90,7 +92,11 @@ void setupInjection() {
     () => HomeStore(getIt<AuthStore>(), getIt<AdoptionRepository>()),
   );
   getIt.registerFactory<ProfileStore>(
-    () => ProfileStore(getIt<AuthStore>(), getIt<StorageRepository>()),
+    () => ProfileStore(
+      getIt<AuthStore>(),
+      getIt<StorageRepository>(),
+      getIt<BiometricService>(),
+    ),
   );
   getIt.registerFactory<FavoritesStore>(() => FavoritesStore());
   getIt.registerFactory<FindStore>(

@@ -152,6 +152,18 @@ mixin _$AuthStore on _AuthStore, Store {
     );
   }
 
+  late final _$sendPasswordResetAsyncAction = AsyncAction(
+    '_AuthStore.sendPasswordReset',
+    context: context,
+  );
+
+  @override
+  Future<bool> sendPasswordReset(String email) {
+    return _$sendPasswordResetAsyncAction.run(
+      () => super.sendPasswordReset(email),
+    );
+  }
+
   late final _$updateProfilePhotoAsyncAction = AsyncAction(
     '_AuthStore.updateProfilePhoto',
     context: context,
