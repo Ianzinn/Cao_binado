@@ -70,14 +70,30 @@ class _FindPageState extends State<FindPage> {
             separatorBuilder: (_, __) => const SizedBox(height: 12),
             itemBuilder: (_, i) {
               final pet = _store.pets[i];
-              return _FindPetCard(
-                pet: pet,
-                onAdopt: () async {
-                  await _store.adopt(pet);
-                  if (context.mounted) {
-                    context.go('/adoption-success', extra: pet.nome);
-                  }
-                },
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => context.push('/pet-details', extra: pet),
+                child: _FindPetCard(
+                  pet: pet,
+                  isAdopting: _store.isAdopting,
+                  onAdopt: () async {
+                    final success = await _store.adopt(pet);
+                    if (!context.mounted) return;
+                    if (success) {
+                      context.go('/adoption-success', extra: pet);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            _store.adoptErrorMessage ??
+                                'Não foi possível concluir a adoção.',
+                          ),
+                          backgroundColor: Colors.redAccent,
+                        ),
+                      );
+                    }
+                  },
+                ),
               );
             },
           );
@@ -95,9 +111,14 @@ class _FindPageState extends State<FindPage> {
 }
 
 class _FindPetCard extends StatelessWidget {
-  const _FindPetCard({required this.pet, required this.onAdopt});
+  const _FindPetCard({
+    required this.pet,
+    required this.onAdopt,
+    required this.isAdopting,
+  });
   final PetModel pet;
   final VoidCallback onAdopt;
+  final bool isAdopting;
 
   @override
   Widget build(BuildContext context) {
@@ -109,29 +130,40 @@ class _FindPetCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(AppRadius.card),
-              bottomLeft: Radius.circular(AppRadius.card),
-            ),
-            child: Container(
-              width: 130,
-              height: 140,
-              color: AppColors.surface,
-              child: pet.primeiraFotoUrl != null
-                  ? Image.network(
-                      pet.primeiraFotoUrl!,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const Icon(
-                        Icons.pets_rounded,
-                        size: 56,
-                        color: AppColors.textSecondary,
-                      ),
-                    )
-                  : const Icon(Icons.pets_rounded,
-                      size: 56, color: AppColors.textSecondary),
-            ),
-          ),
+          Builder(builder: (_) {
+            debugPrint(
+                '🖼  Pet ${pet.id} (${pet.nome}) fotosUrls=${pet.fotosUrls}');
+            return ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(AppRadius.card),
+                bottomLeft: Radius.circular(AppRadius.card),
+              ),
+              child: Hero(
+                tag: pet.id,
+                child: Container(
+                  width: 130,
+                  height: 140,
+                  color: AppColors.surface,
+                  child: pet.primeiraFotoUrl != null
+                      ? Image.network(
+                          pet.primeiraFotoUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, error, st) {
+                            debugPrint(
+                                '❌ Image.network error for ${pet.primeiraFotoUrl}: $error');
+                            return const Icon(
+                              Icons.pets_rounded,
+                              size: 56,
+                              color: AppColors.textSecondary,
+                            );
+                          },
+                        )
+                      : const Icon(Icons.pets_rounded,
+                          size: 56, color: AppColors.textSecondary),
+                ),
+              ),
+            );
+          }),
           const SizedBox(width: 14),
           Expanded(
             child: Padding(
@@ -153,7 +185,7 @@ class _FindPetCard extends StatelessWidget {
                   Align(
                     alignment: Alignment.centerRight,
                     child: GestureDetector(
-                      onTap: onAdopt,
+                      onTap: isAdopting ? null : onAdopt,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 20, vertical: 6),
@@ -161,11 +193,20 @@ class _FindPetCard extends StatelessWidget {
                           color: AppColors.accent,
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: Text('Adotar',
-                            style: GoogleFonts.poppins(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white)),
+                        child: isAdopting
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Text('Adotar',
+                                style: GoogleFonts.poppins(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white)),
                       ),
                     ),
                   ),

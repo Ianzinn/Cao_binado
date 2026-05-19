@@ -2,14 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../domain/models/pet_model.dart';
 
 class AdoptionSuccessPage extends StatelessWidget {
-  const AdoptionSuccessPage({super.key, this.petName = 'Lilica'});
+  const AdoptionSuccessPage({super.key, this.pet});
 
-  final String petName;
+  final PetModel? pet;
 
   @override
   Widget build(BuildContext context) {
+    final petName = pet?.nome ?? 'seu novo amigo';
+    final photoUrl = pet?.primeiraFotoUrl;
+
     return Scaffold(
       backgroundColor: AppColors.accent,
       body: SafeArea(
@@ -51,7 +55,7 @@ class AdoptionSuccessPage extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Text(
-                'Parabéns! Seu novo amiguinho está ansioso para te conhecer.',
+                'Você adotou o $petName com sucesso!',
                 style: GoogleFonts.poppins(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
@@ -70,9 +74,20 @@ class AdoptionSuccessPage extends StatelessWidget {
                   child: Container(
                     width: double.infinity,
                     color: Colors.white24,
-                    child: const Center(
-                      child: Text('🐕', style: TextStyle(fontSize: 120)),
-                    ),
+                    child: photoUrl != null
+                        ? Image.network(
+                            photoUrl,
+                            fit: BoxFit.cover,
+                            loadingBuilder: (_, child, progress) {
+                              if (progress == null) return child;
+                              return const Center(
+                                child: CircularProgressIndicator(
+                                    color: Colors.white),
+                              );
+                            },
+                            errorBuilder: (_, __, ___) => const _PetFallback(),
+                          )
+                        : const _PetFallback(),
                   ),
                 ),
               ),
@@ -90,7 +105,7 @@ class AdoptionSuccessPage extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 40),
               child: GestureDetector(
-                onTap: () {},
+                onTap: () => context.go('/home'),
                 child: Container(
                   height: 56,
                   decoration: BoxDecoration(
@@ -100,7 +115,7 @@ class AdoptionSuccessPage extends StatelessWidget {
                   ),
                   alignment: Alignment.center,
                   child: Text(
-                    'Compartilhar',
+                    'Voltar para a Home',
                     style: GoogleFonts.poppins(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
@@ -114,6 +129,17 @@ class AdoptionSuccessPage extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _PetFallback extends StatelessWidget {
+  const _PetFallback();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Icon(Icons.pets_rounded, size: 120, color: Colors.white),
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../../../shared/statics/endpoints.dart';
 
@@ -18,6 +19,8 @@ class StorageRemoteDatasource {
   }
 
   Future<String> _upload(File file, String folder, String fileName) async {
+    debugPrint(
+        '☁️  Cloudinary upload start: folder=$folder file=$fileName size=${await file.length()}b');
     final uri = Uri.parse(
       'https://api.cloudinary.com/v1_1/${Endpoints.cloudinaryCloudName}/image/upload',
     );
@@ -33,6 +36,8 @@ class StorageRemoteDatasource {
 
     final streamedResponse = await request.send();
     final body = await streamedResponse.stream.bytesToString();
+    debugPrint(
+        '☁️  Cloudinary response status=${streamedResponse.statusCode} body=$body');
     final json = jsonDecode(body) as Map<String, dynamic>;
 
     if (streamedResponse.statusCode != 200) {
@@ -40,6 +45,8 @@ class StorageRemoteDatasource {
       throw Exception('Cloudinary: $error');
     }
 
-    return json['secure_url'] as String;
+    final url = json['secure_url'] as String;
+    debugPrint('☁️  Cloudinary upload OK → $url');
+    return url;
   }
 }

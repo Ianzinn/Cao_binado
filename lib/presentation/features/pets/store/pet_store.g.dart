@@ -9,6 +9,13 @@ part of 'pet_store.dart';
 // ignore_for_file: non_constant_identifier_names, unnecessary_brace_in_string_interps, unnecessary_lambdas, prefer_expression_function_bodies, lines_longer_than_80_chars, avoid_as, avoid_annotating_with_dynamic, no_leading_underscores_for_local_identifiers
 
 mixin _$PetStore on _PetStore, Store {
+  Computed<String?>? _$errorMessageComputed;
+
+  @override
+  String? get errorMessage => (_$errorMessageComputed ??= Computed<String?>(
+    () => super.errorMessage,
+    name: '_PetStore.errorMessage',
+  )).value;
   Computed<List<PetModel>>? _$filteredPetsComputed;
 
   @override
@@ -105,21 +112,39 @@ mixin _$PetStore on _PetStore, Store {
     });
   }
 
-  late final _$errorMessageAtom = Atom(
-    name: '_PetStore.errorMessage',
+  late final _$loadErrorMessageAtom = Atom(
+    name: '_PetStore.loadErrorMessage',
     context: context,
   );
 
   @override
-  String? get errorMessage {
-    _$errorMessageAtom.reportRead();
-    return super.errorMessage;
+  String? get loadErrorMessage {
+    _$loadErrorMessageAtom.reportRead();
+    return super.loadErrorMessage;
   }
 
   @override
-  set errorMessage(String? value) {
-    _$errorMessageAtom.reportWrite(value, super.errorMessage, () {
-      super.errorMessage = value;
+  set loadErrorMessage(String? value) {
+    _$loadErrorMessageAtom.reportWrite(value, super.loadErrorMessage, () {
+      super.loadErrorMessage = value;
+    });
+  }
+
+  late final _$saveErrorMessageAtom = Atom(
+    name: '_PetStore.saveErrorMessage',
+    context: context,
+  );
+
+  @override
+  String? get saveErrorMessage {
+    _$saveErrorMessageAtom.reportRead();
+    return super.saveErrorMessage;
+  }
+
+  @override
+  set saveErrorMessage(String? value) {
+    _$saveErrorMessageAtom.reportWrite(value, super.saveErrorMessage, () {
+      super.saveErrorMessage = value;
     });
   }
 
@@ -202,6 +227,8 @@ selectedImages: ${selectedImages},
 especieFilter: ${especieFilter},
 porteFilter: ${porteFilter},
 isLoading: ${isLoading},
+loadErrorMessage: ${loadErrorMessage},
+saveErrorMessage: ${saveErrorMessage},
 errorMessage: ${errorMessage},
 filteredPets: ${filteredPets}
     ''';

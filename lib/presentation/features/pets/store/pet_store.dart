@@ -36,7 +36,14 @@ abstract class _PetStore with Store {
   bool isLoading = false;
 
   @observable
-  String? errorMessage;
+  String? loadErrorMessage;
+
+  @observable
+  String? saveErrorMessage;
+
+  /// Retro-compat: aponta pro save error por padrão.
+  @computed
+  String? get errorMessage => saveErrorMessage;
 
   @computed
   List<PetModel> get filteredPets => pets.toList();
@@ -44,7 +51,7 @@ abstract class _PetStore with Store {
   @action
   Future<void> loadPets() async {
     isLoading = true;
-    errorMessage = null;
+    loadErrorMessage = null;
     await _petSub?.cancel();
     _petSub = _petRepository
         .getPetsStream(especie: especieFilter, porte: porteFilter)
@@ -61,7 +68,7 @@ abstract class _PetStore with Store {
       onError: (e, st) {
         debugPrint('❌ PetStore.loadPets error: $e\n$st');
         runInAction(() {
-          errorMessage = 'Erro ao carregar pets: $e';
+          loadErrorMessage = 'Erro ao carregar pets: $e';
           isLoading = false;
         });
       },
@@ -97,9 +104,12 @@ abstract class _PetStore with Store {
   @action
   Future<bool> savePet(PetModel pet) async {
     isLoading = true;
-    errorMessage = null;
+    saveErrorMessage = null;
+    debugPrint(
+        '💾 PetStore.savePet start: name=${pet.nome} selectedImages=${selectedImages.length}');
     try {
       final petId = await _petRepository.createPet(pet);
+      debugPrint('💾 PetStore: pet doc created id=$petId');
 
       final fotosUrls = <String>[];
       for (var i = 0; i < selectedImages.length; i++) {
@@ -112,14 +122,17 @@ abstract class _PetStore with Store {
       }
 
       if (fotosUrls.isNotEmpty) {
+        debugPrint('💾 PetStore: updating pet doc with ${fotosUrls.length} photo URLs');
         await _petRepository.updatePetPhotos(petId, fotosUrls);
+      } else {
+        debugPrint('⚠️  PetStore: NO photos selected — pet saved without images');
       }
 
       selectedImages.clear();
       return true;
     } catch (e, st) {
       debugPrint('❌ PetStore.savePet error: $e\n$st');
-      errorMessage = 'Erro ao salvar pet: $e';
+      saveErrorMessage = 'Erro ao salvar pet: $e';
       return false;
     } finally {
       isLoading = false;

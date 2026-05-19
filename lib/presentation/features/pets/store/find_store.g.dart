@@ -24,6 +24,42 @@ mixin _$FindStore on _FindStore, Store {
     name: '_FindStore.errorMessage',
   )).value;
 
+  late final _$isAdoptingAtom = Atom(
+    name: '_FindStore.isAdopting',
+    context: context,
+  );
+
+  @override
+  bool get isAdopting {
+    _$isAdoptingAtom.reportRead();
+    return super.isAdopting;
+  }
+
+  @override
+  set isAdopting(bool value) {
+    _$isAdoptingAtom.reportWrite(value, super.isAdopting, () {
+      super.isAdopting = value;
+    });
+  }
+
+  late final _$adoptErrorMessageAtom = Atom(
+    name: '_FindStore.adoptErrorMessage',
+    context: context,
+  );
+
+  @override
+  String? get adoptErrorMessage {
+    _$adoptErrorMessageAtom.reportRead();
+    return super.adoptErrorMessage;
+  }
+
+  @override
+  set adoptErrorMessage(String? value) {
+    _$adoptErrorMessageAtom.reportWrite(value, super.adoptErrorMessage, () {
+      super.adoptErrorMessage = value;
+    });
+  }
+
   late final _$adoptAsyncAction = AsyncAction(
     '_FindStore.adopt',
     context: context,
@@ -78,6 +114,8 @@ mixin _$FindStore on _FindStore, Store {
   @override
   String toString() {
     return '''
+isAdopting: ${isAdopting},
+adoptErrorMessage: ${adoptErrorMessage},
 isLoading: ${isLoading},
 errorMessage: ${errorMessage}
     ''';

@@ -19,11 +19,17 @@ abstract class _FindStore with Store {
 
   ObservableList<PetModel> get pets => _petStore.pets;
 
+  @observable
+  bool isAdopting = false;
+
+  @observable
+  String? adoptErrorMessage;
+
   @computed
   bool get isLoading => _petStore.isLoading;
 
   @computed
-  String? get errorMessage => _petStore.errorMessage;
+  String? get errorMessage => _petStore.loadErrorMessage;
 
   @action
   Future<void> loadPets() => _petStore.loadPets();
@@ -37,8 +43,12 @@ abstract class _FindStore with Store {
   @action
   Future<bool> adopt(PetModel pet) async {
     final user = _authStore.firebaseUser;
-    if (user == null) return false;
-
+    if (user == null) {
+      adoptErrorMessage = 'Você precisa estar logado para adotar.';
+      return false;
+    }
+    isAdopting = true;
+    adoptErrorMessage = null;
     try {
       final adoption = AdoptionModel(
         id: '',
@@ -47,13 +57,16 @@ abstract class _FindStore with Store {
         adotanteId: user.uid,
         adotanteNome: _authStore.displayName,
         protetorId: pet.protetorId,
-        status: AdoptionStatusValues.interesse,
+        status: AdoptionStatusValues.adotado,
         criadoEm: DateTime.now(),
       );
-      await _adoptionRepository.createAdoption(adoption);
+      await _adoptionRepository.adoptPet(adoption: adoption, petId: pet.id);
       return true;
-    } catch (_) {
+    } catch (e) {
+      adoptErrorMessage = 'Não foi possível concluir a adoção: $e';
       return false;
+    } finally {
+      isAdopting = false;
     }
   }
 }

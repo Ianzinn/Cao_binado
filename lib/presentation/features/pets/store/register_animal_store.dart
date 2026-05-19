@@ -42,11 +42,11 @@ abstract class _RegisterAnimalStore with Store {
   bool get isLoading => _petStore.isLoading;
 
   @computed
-  String? get errorMessage => _petStore.errorMessage;
+  String? get errorMessage => _petStore.saveErrorMessage;
 
   @computed
   bool get isFormValid =>
-      name.isNotEmpty && age.isNotEmpty && kingdom.isNotEmpty;
+      name.isNotEmpty && age.isNotEmpty && animalClass.isNotEmpty;
 
   @action
   void setName(String v) => name = v;
@@ -82,7 +82,7 @@ abstract class _RegisterAnimalStore with Store {
     final pet = PetModel(
       id: '',
       nome: name,
-      especie: animalClass.isNotEmpty ? animalClass : kingdom,
+      especie: animalClass,
       raca: breed,
       idade: age,
       porte: size,

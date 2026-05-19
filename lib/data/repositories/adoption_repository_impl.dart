@@ -22,4 +22,11 @@ class AdoptionRepositoryImpl implements AdoptionRepository {
   @override
   Future<void> updateAdoptionStatus(String id, String status) =>
       _datasource.updateAdoptionStatus(id, status);
+
+  @override
+  Future<String> adoptPet({
+    required AdoptionModel adoption,
+    required String petId,
+  }) =>
+      _datasource.adoptPet(adoption: adoption, petId: petId);
 }
