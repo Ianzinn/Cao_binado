@@ -9,6 +9,7 @@ class AdoptionDto {
       id: doc.id,
       petId: d['petId'] as String,
       petNome: d['petNome'] as String? ?? '',
+      petFotoUrl: d['petFotoUrl'] as String?,
       adotanteId: d['adotanteId'] as String,
       adotanteNome: d['adotanteNome'] as String? ?? '',
       protetorId: d['protetorId'] as String,
@@ -17,12 +18,16 @@ class AdoptionDto {
       visitaData: d['visitaData'] != null
           ? (d['visitaData'] as Timestamp).toDate()
           : null,
+      visitLocation: d['visitLocation'] as String?,
+      visitNotes: d['visitNotes'] as String?,
+      viewedByAdotante: d['viewedByAdotante'] as bool? ?? false,
     );
   }
 
   static Map<String, dynamic> toFirestore(AdoptionModel model) => {
         'petId': model.petId,
         'petNome': model.petNome,
+        if (model.petFotoUrl != null) 'petFotoUrl': model.petFotoUrl,
         'adotanteId': model.adotanteId,
         'adotanteNome': model.adotanteNome,
         'protetorId': model.protetorId,
@@ -30,5 +35,8 @@ class AdoptionDto {
         'criadoEm': Timestamp.fromDate(model.criadoEm),
         if (model.visitaData != null)
           'visitaData': Timestamp.fromDate(model.visitaData!),
+        if (model.visitLocation != null) 'visitLocation': model.visitLocation,
+        if (model.visitNotes != null) 'visitNotes': model.visitNotes,
+        'viewedByAdotante': model.viewedByAdotante,
       };
 }

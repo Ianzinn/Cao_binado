@@ -7,6 +7,7 @@ import '../../../../domain/models/pet_model.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/app_bottom_nav_bar.dart';
 import '../../../../shared/widgets/app_top_bar.dart';
+import '../store/favorites_store.dart';
 import '../store/find_store.dart';
 
 class FindPage extends StatefulWidget {
@@ -18,12 +19,21 @@ class FindPage extends StatefulWidget {
 
 class _FindPageState extends State<FindPage> {
   late final FindStore _store;
+  late final FavoritesStore _favorites;
 
   @override
   void initState() {
     super.initState();
     _store = getIt<FindStore>();
+    _favorites = getIt<FavoritesStore>();
     _store.loadPets();
+    _favorites.start();
+  }
+
+  @override
+  void dispose() {
+    _favorites.dispose();
+    super.dispose();
   }
 
   @override
@@ -76,21 +86,25 @@ class _FindPageState extends State<FindPage> {
                 child: _FindPetCard(
                   pet: pet,
                   isAdopting: _store.isAdopting,
+                  favoritesStore: _favorites,
                   onAdopt: () async {
-                    final success = await _store.adopt(pet);
+                    final result = await _store.requestAdoption(pet);
                     if (!context.mounted) return;
-                    if (success) {
-                      context.go('/adoption-success', extra: pet);
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            _store.adoptErrorMessage ??
-                                'Não foi possível concluir a adoção.',
+                    switch (result) {
+                      case RequestAdoptionResult.success:
+                        context.go('/adoption-success', extra: pet);
+                      case RequestAdoptionResult.duplicate:
+                      case RequestAdoptionResult.notLogged:
+                      case RequestAdoptionResult.error:
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              _store.adoptErrorMessage ??
+                                  'Não foi possível enviar a solicitação.',
+                            ),
+                            backgroundColor: Colors.redAccent,
                           ),
-                          backgroundColor: Colors.redAccent,
-                        ),
-                      );
+                        );
                     }
                   },
                 ),
@@ -115,10 +129,12 @@ class _FindPetCard extends StatelessWidget {
     required this.pet,
     required this.onAdopt,
     required this.isAdopting,
+    required this.favoritesStore,
   });
   final PetModel pet;
   final VoidCallback onAdopt;
   final bool isAdopting;
+  final FavoritesStore favoritesStore;
 
   @override
   Widget build(BuildContext context) {
@@ -130,40 +146,65 @@ class _FindPetCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Builder(builder: (_) {
-            debugPrint(
-                '🖼  Pet ${pet.id} (${pet.nome}) fotosUrls=${pet.fotosUrls}');
-            return ClipRRect(
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(AppRadius.card),
-                bottomLeft: Radius.circular(AppRadius.card),
-              ),
-              child: Hero(
-                tag: pet.id,
-                child: Container(
-                  width: 130,
-                  height: 140,
-                  color: AppColors.surface,
-                  child: pet.primeiraFotoUrl != null
-                      ? Image.network(
-                          pet.primeiraFotoUrl!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, error, st) {
-                            debugPrint(
-                                '❌ Image.network error for ${pet.primeiraFotoUrl}: $error');
-                            return const Icon(
+          Stack(
+            children: [
+              ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(AppRadius.card),
+                  bottomLeft: Radius.circular(AppRadius.card),
+                ),
+                child: Hero(
+                  tag: pet.id,
+                  child: Container(
+                    width: 130,
+                    height: 140,
+                    color: AppColors.surface,
+                    child: pet.primeiraFotoUrl != null
+                        ? Image.network(
+                            pet.primeiraFotoUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => const Icon(
                               Icons.pets_rounded,
                               size: 56,
                               color: AppColors.textSecondary,
-                            );
-                          },
-                        )
-                      : const Icon(Icons.pets_rounded,
-                          size: 56, color: AppColors.textSecondary),
+                            ),
+                          )
+                        : const Icon(Icons.pets_rounded,
+                            size: 56, color: AppColors.textSecondary),
+                  ),
                 ),
               ),
-            );
-          }),
+              Positioned(
+                top: 6,
+                right: 6,
+                child: Observer(
+                  builder: (_) {
+                    final isFav = favoritesStore.isFavorited(pet.id);
+                    return GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => favoritesStore.toggleFavorite(pet.id),
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white.withValues(alpha: 0.92),
+                        ),
+                        child: Icon(
+                          isFav
+                              ? Icons.favorite
+                              : Icons.favorite_border_rounded,
+                          size: 18,
+                          color: isFav
+                              ? AppColors.statusCancelled
+                              : AppColors.textSecondary,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
           const SizedBox(width: 14),
           Expanded(
             child: Padding(
@@ -202,7 +243,7 @@ class _FindPetCard extends StatelessWidget {
                                   strokeWidth: 2,
                                 ),
                               )
-                            : Text('Adotar',
+                            : Text('Solicitar',
                                 style: GoogleFonts.poppins(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,

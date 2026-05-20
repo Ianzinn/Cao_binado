@@ -9,30 +9,66 @@ part of 'adopters_store.dart';
 // ignore_for_file: non_constant_identifier_names, unnecessary_brace_in_string_interps, unnecessary_lambdas, prefer_expression_function_bodies, lines_longer_than_80_chars, avoid_as, avoid_annotating_with_dynamic, no_leading_underscores_for_local_identifiers
 
 mixin _$AdoptersStore on _AdoptersStore, Store {
-  Computed<List<AdopterItem>>? _$filteredComputed;
+  Computed<List<AdoptersGroup>>? _$groupedAdoptersComputed;
 
   @override
-  List<AdopterItem> get filtered =>
-      (_$filteredComputed ??= Computed<List<AdopterItem>>(
-        () => super.filtered,
-        name: '_AdoptersStore.filtered',
+  List<AdoptersGroup> get groupedAdopters =>
+      (_$groupedAdoptersComputed ??= Computed<List<AdoptersGroup>>(
+        () => super.groupedAdopters,
+        name: '_AdoptersStore.groupedAdopters',
       )).value;
 
-  late final _$adoptersAtom = Atom(
-    name: '_AdoptersStore.adopters',
+  late final _$_adoptionsAtom = Atom(
+    name: '_AdoptersStore._adoptions',
     context: context,
   );
 
   @override
-  ObservableList<AdopterItem> get adopters {
-    _$adoptersAtom.reportRead();
-    return super.adopters;
+  ObservableList<AdoptionModel> get _adoptions {
+    _$_adoptionsAtom.reportRead();
+    return super._adoptions;
   }
 
   @override
-  set adopters(ObservableList<AdopterItem> value) {
-    _$adoptersAtom.reportWrite(value, super.adopters, () {
-      super.adopters = value;
+  set _adoptions(ObservableList<AdoptionModel> value) {
+    _$_adoptionsAtom.reportWrite(value, super._adoptions, () {
+      super._adoptions = value;
+    });
+  }
+
+  late final _$isLoadingAtom = Atom(
+    name: '_AdoptersStore.isLoading',
+    context: context,
+  );
+
+  @override
+  bool get isLoading {
+    _$isLoadingAtom.reportRead();
+    return super.isLoading;
+  }
+
+  @override
+  set isLoading(bool value) {
+    _$isLoadingAtom.reportWrite(value, super.isLoading, () {
+      super.isLoading = value;
+    });
+  }
+
+  late final _$errorMessageAtom = Atom(
+    name: '_AdoptersStore.errorMessage',
+    context: context,
+  );
+
+  @override
+  String? get errorMessage {
+    _$errorMessageAtom.reportRead();
+    return super.errorMessage;
+  }
+
+  @override
+  set errorMessage(String? value) {
+    _$errorMessageAtom.reportWrite(value, super.errorMessage, () {
+      super.errorMessage = value;
     });
   }
 
@@ -72,12 +108,12 @@ mixin _$AdoptersStore on _AdoptersStore, Store {
   }
 
   @override
-  void removeAdopter(String id) {
+  void start() {
     final _$actionInfo = _$_AdoptersStoreActionController.startAction(
-      name: '_AdoptersStore.removeAdopter',
+      name: '_AdoptersStore.start',
     );
     try {
-      return super.removeAdopter(id);
+      return super.start();
     } finally {
       _$_AdoptersStoreActionController.endAction(_$actionInfo);
     }
@@ -86,9 +122,10 @@ mixin _$AdoptersStore on _AdoptersStore, Store {
   @override
   String toString() {
     return '''
-adopters: ${adopters},
+isLoading: ${isLoading},
+errorMessage: ${errorMessage},
 searchQuery: ${searchQuery},
-filtered: ${filtered}
+groupedAdopters: ${groupedAdopters}
     ''';
   }
 }

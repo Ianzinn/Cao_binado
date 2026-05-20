@@ -135,6 +135,126 @@ class AppLabeledField extends StatelessWidget {
   }
 }
 
+/// Campo com sugestões enquanto o usuário digita. Permite escolher uma das
+/// opções OU digitar um valor que não está na lista. Visualmente idêntico
+/// ao [AppLabeledField].
+class AppAutocompleteField extends StatelessWidget {
+  const AppAutocompleteField({
+    super.key,
+    required this.label,
+    required this.hint,
+    required this.initialValue,
+    required this.options,
+    required this.onChanged,
+  });
+
+  final String label;
+  final String hint;
+  final String initialValue;
+  final List<String> options;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.poppins(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Autocomplete<String>(
+          initialValue: TextEditingValue(text: initialValue),
+          optionsBuilder: (textEditingValue) {
+            final query = textEditingValue.text.toLowerCase().trim();
+            if (query.isEmpty) return options.take(8);
+            return options
+                .where((o) => o.toLowerCase().contains(query))
+                .take(8);
+          },
+          onSelected: onChanged,
+          fieldViewBuilder:
+              (context, controller, focusNode, onFieldSubmitted) {
+            return Container(
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(AppRadius.input),
+              ),
+              child: TextField(
+                controller: controller,
+                focusNode: focusNode,
+                onChanged: onChanged,
+                onSubmitted: (_) => onFieldSubmitted(),
+                style: GoogleFonts.poppins(
+                    fontSize: 14, color: AppColors.textPrimary),
+                decoration: InputDecoration(
+                  hintText: hint,
+                  hintStyle: GoogleFonts.poppins(
+                    fontSize: 12,
+                    color: AppColors.textPlaceholder,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 10),
+                  border: InputBorder.none,
+                  isDense: true,
+                  suffixIcon: const Icon(
+                    Icons.search_rounded,
+                    color: AppColors.textSecondary,
+                    size: 20,
+                  ),
+                ),
+              ),
+            );
+          },
+          optionsViewBuilder: (context, onSelected, options) {
+            return Align(
+              alignment: Alignment.topLeft,
+              child: Material(
+                elevation: 4,
+                borderRadius: BorderRadius.circular(AppRadius.input),
+                child: ConstrainedBox(
+                  constraints:
+                      const BoxConstraints(maxHeight: 240, maxWidth: 360),
+                  child: ListView.separated(
+                    padding: EdgeInsets.zero,
+                    shrinkWrap: true,
+                    itemCount: options.length,
+                    separatorBuilder: (_, __) =>
+                        const Divider(height: 1, color: AppColors.divider),
+                    itemBuilder: (_, i) {
+                      final option = options.elementAt(i);
+                      return InkWell(
+                        onTap: () => onSelected(option),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 12),
+                          width: double.infinity,
+                          child: Text(
+                            option,
+                            style: GoogleFonts.poppins(
+                              fontSize: 13,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
 class AppDropdownField extends StatelessWidget {
   const AppDropdownField({
     super.key,

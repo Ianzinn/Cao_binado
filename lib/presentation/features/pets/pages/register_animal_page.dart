@@ -7,6 +7,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/app_bottom_nav_bar.dart';
 import '../../../../shared/widgets/app_top_bar.dart';
+import '../../../../shared/statics/pet_breeds.dart';
 import '../../../../shared/widgets/app_text_field.dart';
 import '../store/register_animal_store.dart';
 
@@ -135,17 +136,11 @@ class _RegisterAnimalPageState extends State<RegisterAnimalPage> {
             ),
             const SizedBox(height: 14),
             Observer(
-              builder: (_) => AppDropdownField(
+              builder: (_) => AppAutocompleteField(
                 label: 'Raça',
-                hint: 'Selecione a raça com base no porte',
-                value: _store.breed,
-                items: const [
-                  'Corgi',
-                  'Pug',
-                  'Golden Retriever',
-                  'Vira lata',
-                  'Siamês'
-                ],
+                hint: 'Digite ou selecione a raça',
+                initialValue: _store.breed,
+                options: kPetBreeds,
                 onChanged: _store.setBreed,
               ),
             ),

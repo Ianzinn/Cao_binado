@@ -5,7 +5,10 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/services/biometric_service.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../domain/repositories/adoption_repository.dart';
 import '../../../../shared/widgets/app_bottom_nav_bar.dart';
+import '../../../../shared/widgets/user_avatar.dart';
+import '../../adoption/widgets/visit_scheduled_bottom_sheet.dart';
 import '../../auth/store/auth_store.dart';
 import '../store/home_store.dart';
 
@@ -19,13 +22,43 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   late final HomeStore _store;
   bool _biometricSheetShown = false;
+  bool _visitSheetShown = false;
 
   @override
   void initState() {
     super.initState();
     _store = getIt<HomeStore>();
     _store.initialize();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeOfferBiometric());
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _maybeOfferBiometric();
+      if (mounted) await _maybeShowVisitNotification();
+    });
+  }
+
+  Future<void> _maybeShowVisitNotification() async {
+    if (_visitSheetShown) return;
+    final auth = getIt<AuthStore>();
+    final uid = auth.firebaseUser?.uid;
+    if (uid == null) return;
+    final repo = getIt<AdoptionRepository>();
+    final pending = await repo.findPendingVisitNotification(uid);
+    if (pending == null) return;
+    if (!mounted) return;
+    _visitSheetShown = true;
+    debugPrint('📨 Showing VisitScheduledBottomSheet for ${pending.id}');
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      isDismissible: false,
+      backgroundColor: AppColors.background,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => VisitScheduledBottomSheet(adoption: pending),
+    );
+    // Marca como visto após o fechamento (Entendi ou swipe-down só
+    // funciona se isDismissible: true — aqui forçamos o tap em Entendi).
+    await repo.markVisitNotificationViewed(pending.id);
   }
 
   Future<void> _maybeOfferBiometric() async {
@@ -46,6 +79,7 @@ class _HomePageState extends State<HomePage> {
     final choice = await showModalBottomSheet<_BiometricChoice>(
       context: context,
       isScrollControlled: true,
+      backgroundColor: AppColors.background,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -99,23 +133,43 @@ class _HomePageState extends State<HomePage> {
                       ),
                       const SizedBox(height: 32),
                       _store.isAdmin
-                          ? Row(
+                          ? Column(
                               children: [
-                                Expanded(
-                                  child: _ActionCard(
-                                    label: 'Cadastrar Animal',
-                                    icon: Icons.add_circle_outline_rounded,
-                                    onTap: () =>
-                                        context.go('/register-animal'),
-                                  ),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: _ActionCard(
+                                        label: 'Cadastrar Animal',
+                                        icon:
+                                            Icons.add_circle_outline_rounded,
+                                        onTap: () =>
+                                            context.go('/register-animal'),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: _ActionCard(
+                                        label: 'Solicitações',
+                                        icon: Icons.mail_outline_rounded,
+                                        onTap: () =>
+                                            context.go('/adoption-requests'),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: _ActionCard(
-                                    label: 'Histórico',
-                                    icon: Icons.history_rounded,
-                                    onTap: () => context.go('/history'),
-                                  ),
+                                const SizedBox(height: 16),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: _ActionCard(
+                                        label: 'Histórico',
+                                        icon: Icons.history_rounded,
+                                        onTap: () => context.go('/history'),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    const Expanded(child: SizedBox.shrink()),
+                                  ],
                                 ),
                               ],
                             )
@@ -180,15 +234,7 @@ class _TopBar extends StatelessWidget {
           const SizedBox(width: 12),
           GestureDetector(
             onTap: onProfileTap,
-            child: Container(
-              width: 48,
-              height: 48,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.surface,
-              ),
-              child: const Icon(Icons.person, size: 30, color: AppColors.textSecondary),
-            ),
+            child: const CurrentUserAvatar(size: 48),
           ),
         ],
       ),

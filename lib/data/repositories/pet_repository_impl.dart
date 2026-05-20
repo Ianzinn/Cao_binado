@@ -29,5 +29,9 @@ class PetRepositoryImpl implements PetRepository {
       _datasource.getPetsByProtetor(protetorId);
 
   @override
+  Stream<List<PetModel>> streamPetsByIds(List<String> ids) =>
+      _datasource.streamPetsByIds(ids);
+
+  @override
   Future<void> deletePet(String id) => _datasource.deletePet(id);
 }

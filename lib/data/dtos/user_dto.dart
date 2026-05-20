@@ -10,6 +10,8 @@ class UserDto {
       email: d['email'] as String,
       tipoUsuario: d['tipoUsuario'] as String,
       fotoPerfilUrl: d['fotoPerfilUrl'] as String?,
+      telefone: d['telefone'] as String?,
+      favoritePetIds: List<String>.from(d['favoritePetIds'] as List? ?? []),
       criadoEm: (d['criadoEm'] as Timestamp).toDate(),
     );
   }
@@ -19,6 +21,8 @@ class UserDto {
         'email': model.email,
         'tipoUsuario': model.tipoUsuario,
         if (model.fotoPerfilUrl != null) 'fotoPerfilUrl': model.fotoPerfilUrl,
+        if (model.telefone != null) 'telefone': model.telefone,
+        'favoritePetIds': model.favoritePetIds,
         'criadoEm': Timestamp.fromDate(model.criadoEm),
       };
 }

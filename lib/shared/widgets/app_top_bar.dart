@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../core/theme/app_theme.dart';
+import 'user_avatar.dart';
 
 class AppDarkTopBar extends StatelessWidget implements PreferredSizeWidget {
   const AppDarkTopBar({
@@ -65,14 +66,13 @@ class AppDarkTopBar extends StatelessWidget implements PreferredSizeWidget {
           if (trailing != null)
             trailing!
           else if (showAvatar)
-            Container(
-              width: 41,
-              height: 41,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white24,
+            GestureDetector(
+              onTap: () => context.go('/profile'),
+              child: const CurrentUserAvatar(
+                size: 41,
+                fallbackBackground: Colors.white24,
+                fallbackColor: Colors.white,
               ),
-              child: const Icon(Icons.person, color: Colors.white, size: 24),
             )
           else
             const SizedBox(width: 41),

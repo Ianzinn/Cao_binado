@@ -41,32 +41,44 @@ abstract class _FindStore with Store {
   void setPorteFilter(String? v) => _petStore.setPorteFilter(v);
 
   @action
-  Future<bool> adopt(PetModel pet) async {
+  Future<RequestAdoptionResult> requestAdoption(PetModel pet) async {
     final user = _authStore.firebaseUser;
     if (user == null) {
-      adoptErrorMessage = 'Você precisa estar logado para adotar.';
-      return false;
+      adoptErrorMessage = 'Você precisa estar logado para solicitar adoção.';
+      return RequestAdoptionResult.notLogged;
     }
     isAdopting = true;
     adoptErrorMessage = null;
     try {
+      final alreadyRequested = await _adoptionRepository.hasActiveRequest(
+        petId: pet.id,
+        adotanteId: user.uid,
+      );
+      if (alreadyRequested) {
+        adoptErrorMessage =
+            'Você já tem uma solicitação ativa para este pet.';
+        return RequestAdoptionResult.duplicate;
+      }
       final adoption = AdoptionModel(
         id: '',
         petId: pet.id,
         petNome: pet.nome,
+        petFotoUrl: pet.primeiraFotoUrl,
         adotanteId: user.uid,
         adotanteNome: _authStore.displayName,
         protetorId: pet.protetorId,
-        status: AdoptionStatusValues.adotado,
+        status: AdoptionStatusValues.interesse,
         criadoEm: DateTime.now(),
       );
-      await _adoptionRepository.adoptPet(adoption: adoption, petId: pet.id);
-      return true;
+      await _adoptionRepository.createAdoption(adoption);
+      return RequestAdoptionResult.success;
     } catch (e) {
-      adoptErrorMessage = 'Não foi possível concluir a adoção: $e';
-      return false;
+      adoptErrorMessage = 'Não foi possível enviar a solicitação: $e';
+      return RequestAdoptionResult.error;
     } finally {
       isAdopting = false;
     }
   }
 }
+
+enum RequestAdoptionResult { success, duplicate, notLogged, error }

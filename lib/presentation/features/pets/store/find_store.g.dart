@@ -60,14 +60,14 @@ mixin _$FindStore on _FindStore, Store {
     });
   }
 
-  late final _$adoptAsyncAction = AsyncAction(
-    '_FindStore.adopt',
+  late final _$requestAdoptionAsyncAction = AsyncAction(
+    '_FindStore.requestAdoption',
     context: context,
   );
 
   @override
-  Future<bool> adopt(PetModel pet) {
-    return _$adoptAsyncAction.run(() => super.adopt(pet));
+  Future<RequestAdoptionResult> requestAdoption(PetModel pet) {
+    return _$requestAdoptionAsyncAction.run(() => super.requestAdoption(pet));
   }
 
   late final _$_FindStoreActionController = ActionController(

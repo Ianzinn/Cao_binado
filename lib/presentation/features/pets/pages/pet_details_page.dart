@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../domain/models/pet_model.dart';
+import '../store/favorites_store.dart';
 import '../store/find_store.dart';
 
 class PetDetailsPage extends StatefulWidget {
@@ -19,6 +20,7 @@ class PetDetailsPage extends StatefulWidget {
 class _PetDetailsPageState extends State<PetDetailsPage> {
   late final PageController _pageController;
   late final FindStore _findStore;
+  late final FavoritesStore _favoritesStore;
   int _currentPage = 0;
 
   @override
@@ -26,30 +28,36 @@ class _PetDetailsPageState extends State<PetDetailsPage> {
     super.initState();
     _pageController = PageController();
     _findStore = getIt<FindStore>();
+    _favoritesStore = getIt<FavoritesStore>();
+    _favoritesStore.start();
   }
 
   @override
   void dispose() {
+    _favoritesStore.dispose();
     _pageController.dispose();
     super.dispose();
   }
 
   Future<void> _handleAdopt() async {
     final pet = widget.pet;
-    final success = await _findStore.adopt(pet);
+    final result = await _findStore.requestAdoption(pet);
     if (!mounted) return;
-    if (success) {
-      context.go('/adoption-success', extra: pet);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            _findStore.adoptErrorMessage ??
-                'Não foi possível concluir a adoção.',
+    switch (result) {
+      case RequestAdoptionResult.success:
+        context.go('/adoption-success', extra: pet);
+      case RequestAdoptionResult.duplicate:
+      case RequestAdoptionResult.notLogged:
+      case RequestAdoptionResult.error:
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              _findStore.adoptErrorMessage ??
+                  'Não foi possível enviar a solicitação.',
+            ),
+            backgroundColor: Colors.redAccent,
           ),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
+        );
     }
   }
 
@@ -75,6 +83,7 @@ class _PetDetailsPageState extends State<PetDetailsPage> {
             currentPage: _currentPage,
             onPageChanged: (i) => setState(() => _currentPage = i),
             onBack: _back,
+            favoritesStore: _favoritesStore,
           ),
           Expanded(
             child: SingleChildScrollView(
@@ -158,7 +167,7 @@ class _PetDetailsPageState extends State<PetDetailsPage> {
                         ),
                       )
                     : Text(
-                        isAdopted ? 'Adotado' : 'Adotar',
+                        isAdopted ? 'Adotado' : 'Solicitar adoção',
                         style: GoogleFonts.poppins(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
@@ -181,6 +190,7 @@ class _Gallery extends StatelessWidget {
     required this.currentPage,
     required this.onPageChanged,
     required this.onBack,
+    required this.favoritesStore,
   });
 
   final PetModel pet;
@@ -188,6 +198,7 @@ class _Gallery extends StatelessWidget {
   final int currentPage;
   final ValueChanged<int> onPageChanged;
   final VoidCallback onBack;
+  final FavoritesStore favoritesStore;
 
   @override
   Widget build(BuildContext context) {
@@ -261,6 +272,32 @@ class _Gallery extends StatelessWidget {
                 child: const Icon(Icons.arrow_back, color: AppColors.primary),
               ),
             ),
+          ),
+          // Botão favoritar
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 8,
+            right: 16,
+            child: Observer(builder: (_) {
+              final isFav = favoritesStore.isFavorited(pet.id);
+              return GestureDetector(
+                onTap: () => favoritesStore.toggleFavorite(pet.id),
+                child: Container(
+                  width: 40,
+                  height: 40,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                  ),
+                  child: Icon(
+                    isFav ? Icons.favorite : Icons.favorite_border_rounded,
+                    color: isFav
+                        ? AppColors.statusCancelled
+                        : AppColors.primary,
+                    size: 22,
+                  ),
+                ),
+              );
+            }),
           ),
           // Indicadores de página
           if (photos.length > 1)

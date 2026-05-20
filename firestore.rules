@@ -5,38 +5,50 @@ service cloud.firestore {
     // ── pets ─────────────────────────────────────────────────────────
     // Qualquer autenticado lê.
     // Protetor cria/edita/deleta os seus.
-    // Qualquer autenticado pode marcar um pet disponível como adotado
-    // (necessário para o fluxo de adoção que faz batch).
+    // Protetor pode marcar pet como adotado durante a aprovação de solicitação
+    // (já que a transição é dele e ele autorizou).
     match /pets/{petId} {
       allow read: if request.auth != null;
       allow create: if request.auth != null
         && request.resource.data.protetorId == request.auth.uid;
-      allow update: if request.auth != null && (
-        resource.data.protetorId == request.auth.uid
-        || (resource.data.status == 'disponivel'
-            && request.resource.data.status == 'adotado')
-      );
+      allow update: if request.auth != null
+        && resource.data.protetorId == request.auth.uid;
       allow delete: if request.auth != null
         && resource.data.protetorId == request.auth.uid;
     }
 
     // ── adoptions ────────────────────────────────────────────────────
-    // Adotante cria pra si próprio; adotante e protetor leem/editam.
+    // Adotante cria pra si próprio com status=interesse.
+    // Adotante e protetor leem suas próprias adoções.
+    // Apenas protetor aprova (visita_agendada) ou recusa (cancelado).
+    // Adotante pode cancelar a sua própria solicitação.
     match /adoptions/{adoptionId} {
       allow read: if request.auth != null && (
         resource.data.adotanteId == request.auth.uid
         || resource.data.protetorId == request.auth.uid
       );
       allow create: if request.auth != null
-        && request.resource.data.adotanteId == request.auth.uid;
+        && request.resource.data.adotanteId == request.auth.uid
+        && request.resource.data.status == 'interesse';
       allow update: if request.auth != null && (
-        resource.data.adotanteId == request.auth.uid
-        || resource.data.protetorId == request.auth.uid
+        // Protetor pode alterar status (aprovar/recusar) e adicionar dados
+        // da visita (visitLocation, visitaData, visitNotes).
+        (resource.data.protetorId == request.auth.uid
+          && request.resource.data.status in ['visita_agendada', 'cancelado', 'adotado'])
+        // Adotante pode cancelar a própria solicitação
+        || (resource.data.adotanteId == request.auth.uid
+          && request.resource.data.status == 'cancelado')
+        // Adotante pode marcar como visto (viewedByAdotante=true) sem
+        // mudar mais nada — usado quando fecha o bottom sheet de visita.
+        || (resource.data.adotanteId == request.auth.uid
+          && request.resource.data.viewedByAdotante == true
+          && request.resource.data.status == resource.data.status)
       );
     }
 
     // ── users ────────────────────────────────────────────────────────
-    // Qualquer autenticado lê (necessário pra exibir nome do protetor).
+    // Qualquer autenticado lê (necessário pra exibir nome do protetor
+    // e perfil do interessado nas solicitações).
     // Só o próprio usuário escreve no seu doc.
     match /users/{userId} {
       allow read: if request.auth != null;

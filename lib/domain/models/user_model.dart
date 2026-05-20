@@ -7,6 +7,7 @@ class UserModel {
     required this.criadoEm,
     this.fotoPerfilUrl,
     this.telefone,
+    this.favoritePetIds = const [],
   });
 
   final String uid;
@@ -18,6 +19,7 @@ class UserModel {
   final String? fotoPerfilUrl;
   final String? telefone;
   final DateTime criadoEm;
+  final List<String> favoritePetIds;
 
   UserModel copyWith({
     String? nome,
@@ -25,6 +27,7 @@ class UserModel {
     String? tipoUsuario,
     String? fotoPerfilUrl,
     String? telefone,
+    List<String>? favoritePetIds,
   }) =>
       UserModel(
         uid: uid,
@@ -34,5 +37,6 @@ class UserModel {
         fotoPerfilUrl: fotoPerfilUrl ?? this.fotoPerfilUrl,
         telefone: telefone ?? this.telefone,
         criadoEm: criadoEm,
+        favoritePetIds: favoritePetIds ?? this.favoritePetIds,
       );
 }

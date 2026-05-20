@@ -7,5 +7,6 @@ abstract class PetRepository {
   Future<PetModel?> getPetById(String id);
   Stream<List<PetModel>> getPetsStream({String? especie, String? porte});
   Stream<List<PetModel>> getPetsByProtetor(String protetorId);
+  Stream<List<PetModel>> streamPetsByIds(List<String> ids);
   Future<void> deletePet(String id);
 }

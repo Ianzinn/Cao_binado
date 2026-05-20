@@ -15,4 +15,15 @@ class UserRepositoryImpl implements UserRepository {
 
   @override
   Future<void> updateUser(UserModel user) => _datasource.updateUser(user);
+
+  @override
+  Stream<UserModel?> streamUser(String uid) => _datasource.streamUser(uid);
+
+  @override
+  Future<void> addFavorite(String uid, String petId) =>
+      _datasource.addFavorite(uid, petId);
+
+  @override
+  Future<void> removeFavorite(String uid, String petId) =>
+      _datasource.removeFavorite(uid, petId);
 }

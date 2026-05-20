@@ -30,7 +30,7 @@ class AdoptionSuccessPage extends StatelessWidget {
                   ),
                   const Spacer(),
                   Text(
-                    'Adoção Confirmada',
+                    'Solicitação Enviada',
                     style: GoogleFonts.poppins(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -55,9 +55,9 @@ class AdoptionSuccessPage extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Text(
-                'Você adotou o $petName com sucesso!',
+                'Sua solicitação para adotar o $petName foi enviada! O responsável vai analisar seu perfil em breve.',
                 style: GoogleFonts.poppins(
-                  fontSize: 22,
+                  fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: AppColors.primary,
                   height: 1.4,

@@ -44,6 +44,9 @@ import '../../presentation/features/adopters/store/register_tutor_store.dart';
 // Presentation — History store
 import '../../presentation/features/history/store/history_store.dart';
 
+// Presentation — Adoption Requests store
+import '../../presentation/features/adoption/store/adoption_requests_store.dart';
+
 final GetIt getIt = GetIt.instance;
 
 void setupInjection() {
@@ -98,7 +101,13 @@ void setupInjection() {
       getIt<BiometricService>(),
     ),
   );
-  getIt.registerFactory<FavoritesStore>(() => FavoritesStore());
+  getIt.registerFactory<FavoritesStore>(
+    () => FavoritesStore(
+      getIt<UserRepository>(),
+      getIt<PetRepository>(),
+      getIt<AuthStore>(),
+    ),
+  );
   getIt.registerFactory<FindStore>(
     () => FindStore(
       getIt<PetStore>(),
@@ -109,9 +118,17 @@ void setupInjection() {
   getIt.registerFactory<RegisterAnimalStore>(
     () => RegisterAnimalStore(getIt<PetStore>(), getIt<AuthStore>()),
   );
-  getIt.registerFactory<AdoptersStore>(() => AdoptersStore());
+  getIt.registerFactory<AdoptersStore>(
+    () => AdoptersStore(getIt<AdoptionRepository>(), getIt<AuthStore>()),
+  );
   getIt.registerFactory<RegisterTutorStore>(() => RegisterTutorStore());
   getIt.registerFactory<HistoryStore>(
     () => HistoryStore(getIt<AdoptionRepository>(), getIt<AuthStore>()),
+  );
+  getIt.registerFactory<AdoptionRequestsStore>(
+    () => AdoptionRequestsStore(
+      getIt<AdoptionRepository>(),
+      getIt<AuthStore>(),
+    ),
   );
 }

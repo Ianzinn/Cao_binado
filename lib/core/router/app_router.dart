@@ -17,11 +17,17 @@ import '../../presentation/features/adopters/pages/adopters_page.dart';
 import '../../presentation/features/adopters/pages/register_tutor_page.dart';
 import '../../presentation/features/history/pages/history_page.dart';
 import '../../presentation/features/adoption/pages/adoption_success_page.dart';
+import '../../presentation/features/adoption/pages/adoption_requests_page.dart';
+import '../../presentation/features/adoption/pages/adopter_profile_page.dart';
 import '../../presentation/features/profile/pages/profile_page.dart';
 import '../../domain/models/pet_model.dart';
 
 const _publicRoutes = ['/', '/onboarding', '/login', '/register'];
-const _adminRoutes = ['/register-animal'];
+const _adminRoutes = [
+  '/register-animal',
+  '/adopters',
+  '/adoption-requests',
+];
 
 class _AuthRefresh extends ChangeNotifier {
   _AuthRefresh() {
@@ -119,6 +125,18 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/profile',
       builder: (_, __) => const ProfilePage(),
+    ),
+    GoRoute(
+      path: '/adoption-requests',
+      builder: (_, __) => const AdoptionRequestsPage(),
+    ),
+    GoRoute(
+      path: '/adopter-profile',
+      builder: (context, state) {
+        final uid = state.extra as String?;
+        if (uid == null) return const AdoptionRequestsPage();
+        return AdopterProfilePage(userId: uid);
+      },
     ),
   ],
 );

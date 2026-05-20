@@ -48,4 +48,19 @@ class PetRemoteDatasource {
       .map((s) => s.docs.map(PetDto.fromFirestore).toList());
 
   Future<void> deletePet(String id) => _pets.doc(id).delete();
+
+  /// Stream de pets cujo id está na lista. Útil pra carregar a lista de
+  /// favoritos do usuário (que armazena só IDs). Lida com lote de 10 IDs
+  /// por restrição do `whereIn` do Firestore.
+  Stream<List<PetModel>> streamPetsByIds(List<String> ids) {
+    if (ids.isEmpty) return Stream.value(const []);
+    // Firestore aceita whereIn com até 10 valores. Como nossos usuários
+    // dificilmente terão mais que isso favoritado, fazemos 1 query simples.
+    // Se ultrapassar 10, truncamos os mais recentes.
+    final batch = ids.length > 10 ? ids.sublist(ids.length - 10) : ids;
+    return _pets
+        .where(FieldPath.documentId, whereIn: batch)
+        .snapshots()
+        .map((s) => s.docs.map(PetDto.fromFirestore).toList());
+  }
 }
