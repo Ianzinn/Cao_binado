@@ -20,6 +20,7 @@ import '../../presentation/features/adoption/pages/adoption_success_page.dart';
 import '../../presentation/features/adoption/pages/adoption_requests_page.dart';
 import '../../presentation/features/adoption/pages/adopter_profile_page.dart';
 import '../../presentation/features/profile/pages/profile_page.dart';
+import '../../presentation/features/profile/pages/account_info_page.dart';
 import '../../domain/models/pet_model.dart';
 
 const _publicRoutes = ['/', '/onboarding', '/login', '/register'];
@@ -125,6 +126,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/profile',
       builder: (_, __) => const ProfilePage(),
+    ),
+    GoRoute(
+      path: '/account-info',
+      builder: (_, __) => const AccountInfoPage(),
     ),
     GoRoute(
       path: '/adoption-requests',

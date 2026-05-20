@@ -8,6 +8,15 @@ class UserModel {
     this.fotoPerfilUrl,
     this.telefone,
     this.favoritePetIds = const [],
+    this.cpf,
+    this.cep,
+    this.uf,
+    this.cidade,
+    this.bairro,
+    this.endereco,
+    this.numero,
+    this.complemento,
+    this.observacoes,
   });
 
   final String uid;
@@ -20,6 +29,15 @@ class UserModel {
   final String? telefone;
   final DateTime criadoEm;
   final List<String> favoritePetIds;
+  final String? cpf;
+  final String? cep;
+  final String? uf;
+  final String? cidade;
+  final String? bairro;
+  final String? endereco;
+  final String? numero;
+  final String? complemento;
+  final String? observacoes;
 
   UserModel copyWith({
     String? nome,
@@ -38,5 +56,14 @@ class UserModel {
         telefone: telefone ?? this.telefone,
         criadoEm: criadoEm,
         favoritePetIds: favoritePetIds ?? this.favoritePetIds,
+        cpf: cpf,
+        cep: cep,
+        uf: uf,
+        cidade: cidade,
+        bairro: bairro,
+        endereco: endereco,
+        numero: numero,
+        complemento: complemento,
+        observacoes: observacoes,
       );
 }

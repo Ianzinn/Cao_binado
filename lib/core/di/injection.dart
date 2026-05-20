@@ -3,6 +3,7 @@ import 'package:get_it/get_it.dart';
 // Core
 import '../services/auth_service.dart';
 import '../services/biometric_service.dart';
+import '../services/cep_service.dart';
 
 // Domain — repository interfaces
 import '../../domain/repositories/user_repository.dart';
@@ -30,6 +31,7 @@ import '../../presentation/features/auth/store/register_store.dart';
 // Presentation — Home / Profile stores
 import '../../presentation/features/home/store/home_store.dart';
 import '../../presentation/features/profile/store/profile_store.dart';
+import '../../presentation/features/profile/store/account_info_store.dart';
 
 // Presentation — Pets stores
 import '../../presentation/features/pets/store/pet_store.dart';
@@ -53,6 +55,7 @@ void setupInjection() {
   // ── Core services ──────────────────────────────────────────────────────────
   getIt.registerLazySingleton<AuthService>(() => FirebaseAuthService());
   getIt.registerLazySingleton<BiometricService>(() => BiometricService());
+  getIt.registerLazySingleton<CepService>(() => CepService());
 
   // ── Remote datasources ─────────────────────────────────────────────────────
   getIt.registerLazySingleton<UserRemoteDatasource>(
@@ -99,6 +102,13 @@ void setupInjection() {
       getIt<AuthStore>(),
       getIt<StorageRepository>(),
       getIt<BiometricService>(),
+    ),
+  );
+  getIt.registerFactory<AccountInfoStore>(
+    () => AccountInfoStore(
+      getIt<AuthStore>(),
+      getIt<UserRepository>(),
+      getIt<CepService>(),
     ),
   );
   getIt.registerFactory<FavoritesStore>(

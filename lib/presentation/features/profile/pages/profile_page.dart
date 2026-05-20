@@ -109,7 +109,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   _MenuItem(
                     icon: Icons.person_outline_rounded,
                     label: 'Informações da conta',
-                    onTap: () {},
+                    onTap: () => context.push('/account-info'),
                   ),
                   const Divider(height: 1, color: AppColors.divider),
                   _MenuItem(
