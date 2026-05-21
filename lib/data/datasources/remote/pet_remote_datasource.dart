@@ -20,6 +20,9 @@ class PetRemoteDatasource {
   Future<void> updatePetPhotos(String petId, List<String> fotosUrls) =>
       _pets.doc(petId).update({'fotosUrls': fotosUrls});
 
+  Future<void> updatePetStatus(String petId, String status) =>
+      _pets.doc(petId).update({'status': status});
+
   Future<PetModel?> getPetById(String id) async {
     final doc = await _pets.doc(id).get();
     if (!doc.exists) return null;

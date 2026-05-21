@@ -3,6 +3,7 @@ class AdoptionStatusValues {
   static const visitaAgendada = 'visita_agendada';
   static const adotado = 'adotado';
   static const cancelado = 'cancelado';
+  static const naoAdotado = 'nao_adotado';
 }
 
 class AdoptionModel {

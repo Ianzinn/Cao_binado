@@ -101,5 +101,25 @@ abstract class _AdoptionRequestsStore with Store {
     }
   }
 
+  @action
+  Future<bool> finalizeVisit(AdoptionModel request,
+      {required bool adopted}) async {
+    isProcessing = true;
+    errorMessage = null;
+    try {
+      await _adoptionRepository.finalizeVisit(
+        adoptionId: request.id,
+        petId: request.petId,
+        adopted: adopted,
+      );
+      return true;
+    } catch (e) {
+      errorMessage = 'Não foi possível finalizar a visita: $e';
+      return false;
+    } finally {
+      isProcessing = false;
+    }
+  }
+
   void dispose() => _sub?.cancel();
 }

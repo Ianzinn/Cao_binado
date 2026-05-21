@@ -1,4 +1,4 @@
-enum PetStatus { disponivel, adotado }
+enum PetStatus { disponivel, visitaAgendada, adotado }
 
 class PetModel {
   const PetModel({

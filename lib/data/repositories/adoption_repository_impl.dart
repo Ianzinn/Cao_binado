@@ -62,6 +62,18 @@ class AdoptionRepositoryImpl implements AdoptionRepository {
       _datasource.rejectAdoption(adoptionId);
 
   @override
+  Future<void> finalizeVisit({
+    required String adoptionId,
+    required String petId,
+    required bool adopted,
+  }) =>
+      _datasource.finalizeVisit(
+        adoptionId: adoptionId,
+        petId: petId,
+        adopted: adopted,
+      );
+
+  @override
   Future<AdoptionModel?> findPendingVisitNotification(String adotanteId) =>
       _datasource.findPendingVisitNotification(adotanteId);
 

@@ -51,7 +51,10 @@ class AdoptionRemoteDatasource {
   Stream<List<AdoptionModel>> getPendingRequestsForProtetor(String protetorId) =>
       _adoptions
           .where('protetorId', isEqualTo: protetorId)
-          .where('status', isEqualTo: AdoptionStatusValues.interesse)
+          .where('status', whereIn: [
+            AdoptionStatusValues.interesse,
+            AdoptionStatusValues.visitaAgendada,
+          ])
           .orderBy('criadoEm', descending: true)
           .snapshots()
           .map((s) => s.docs.map(AdoptionDto.fromFirestore).toList());
@@ -93,7 +96,27 @@ class AdoptionRemoteDatasource {
       if (visitNotes != null && visitNotes.isNotEmpty) 'visitNotes': visitNotes,
       'viewedByAdotante': false,
     });
-    batch.update(petRef, {'status': 'adotado'});
+    batch.update(petRef, {'status': 'visita_agendada'});
+    await batch.commit();
+  }
+
+  /// Finaliza a visita: se adotado, pet→adotado + adoção→adotado;
+  /// se não adotado, pet→disponivel + adoção→nao_adotado (atômico).
+  Future<void> finalizeVisit({
+    required String adoptionId,
+    required String petId,
+    required bool adopted,
+  }) async {
+    final adoptionRef = _adoptions.doc(adoptionId);
+    final petRef = _db.collection('pets').doc(petId);
+    final batch = _db.batch();
+    if (adopted) {
+      batch.update(adoptionRef, {'status': AdoptionStatusValues.adotado});
+      batch.update(petRef, {'status': 'adotado'});
+    } else {
+      batch.update(adoptionRef, {'status': AdoptionStatusValues.naoAdotado});
+      batch.update(petRef, {'status': 'disponivel'});
+    }
     await batch.commit();
   }
 

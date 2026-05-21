@@ -10,6 +10,7 @@ import '../../../../domain/repositories/user_repository.dart';
 import '../../../../shared/widgets/app_top_bar.dart';
 import '../store/adoption_requests_store.dart';
 import '../widgets/schedule_visit_bottom_sheet.dart';
+import '../widgets/visit_result_bottom_sheet.dart';
 
 class AdoptionRequestsPage extends StatefulWidget {
   const AdoptionRequestsPage({super.key});
@@ -76,6 +77,34 @@ class _AdoptionRequestsPageState extends State<AdoptionRequestsPage> {
     );
   }
 
+  Future<void> _finalizeVisit(AdoptionModel request) async {
+    final adopted = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.background,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => VisitResultBottomSheet(petNome: request.petNome),
+    );
+    if (adopted == null) return;
+    if (!mounted) return;
+    final ok = await _store.finalizeVisit(request, adopted: adopted);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(ok
+            ? adopted
+                ? '${request.petNome} foi adotado com sucesso!'
+                : 'Pet liberado para novas solicitações.'
+            : _store.errorMessage ?? 'Não foi possível finalizar a visita.'),
+        backgroundColor: ok
+            ? (adopted ? AppColors.accent : AppColors.textSecondary)
+            : Colors.redAccent,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -127,6 +156,7 @@ class _AdoptionRequestsPageState extends State<AdoptionRequestsPage> {
                 isProcessing: _store.isProcessing,
                 onApprove: () => _approve(r),
                 onReject: () => _reject(r),
+                onFinalize: () => _finalizeVisit(r),
                 onViewProfile: () =>
                     context.push('/adopter-profile', extra: r.adotanteId),
               ),
@@ -144,6 +174,7 @@ class _RequestCard extends StatelessWidget {
     required this.isProcessing,
     required this.onApprove,
     required this.onReject,
+    required this.onFinalize,
     required this.onViewProfile,
   });
 
@@ -151,7 +182,11 @@ class _RequestCard extends StatelessWidget {
   final bool isProcessing;
   final VoidCallback onApprove;
   final VoidCallback onReject;
+  final VoidCallback onFinalize;
   final VoidCallback onViewProfile;
+
+  bool get _isVisitScheduled =>
+      request.status == AdoptionStatusValues.visitaAgendada;
 
   @override
   Widget build(BuildContext context) {
@@ -189,13 +224,8 @@ class _RequestCard extends StatelessWidget {
                         color: AppColors.textPrimary,
                       ),
                     ),
-                    Text(
-                      'Solicitação de adoção',
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
+                    const SizedBox(height: 4),
+                    _StatusBadge(status: request.status),
                   ],
                 ),
               ),
@@ -220,25 +250,63 @@ class _RequestCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          // Actions
-          Row(
-            children: [
-              Expanded(
-                child: _SecondaryButton(
-                  label: 'Recusar',
-                  onTap: isProcessing ? null : onReject,
+          // Actions — differ by status
+          if (_isVisitScheduled)
+            _PrimaryButton(
+              label: 'Finalizar visita',
+              onTap: isProcessing ? null : onFinalize,
+            )
+          else
+            Row(
+              children: [
+                Expanded(
+                  child: _SecondaryButton(
+                    label: 'Recusar',
+                    onTap: isProcessing ? null : onReject,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _PrimaryButton(
-                  label: 'Marcar visita',
-                  onTap: isProcessing ? null : onApprove,
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _PrimaryButton(
+                    label: 'Marcar visita',
+                    onTap: isProcessing ? null : onApprove,
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
         ],
+      ),
+    );
+  }
+}
+
+class _StatusBadge extends StatelessWidget {
+  const _StatusBadge({required this.status});
+  final String status;
+
+  @override
+  Widget build(BuildContext context) {
+    final (label, color) = switch (status) {
+      AdoptionStatusValues.visitaAgendada => (
+          'Visita agendada',
+          AppColors.statusOpen,
+        ),
+      AdoptionStatusValues.adotado => ('Adotado', AppColors.statusAdopted),
+      _ => ('Aguardando', AppColors.textSecondary),
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        label,
+        style: GoogleFonts.poppins(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
       ),
     );
   }

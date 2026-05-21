@@ -31,10 +31,10 @@ service cloud.firestore {
         && request.resource.data.adotanteId == request.auth.uid
         && request.resource.data.status == 'interesse';
       allow update: if request.auth != null && (
-        // Protetor pode alterar status (aprovar/recusar) e adicionar dados
-        // da visita (visitLocation, visitaData, visitNotes).
+        // Protetor pode alterar status (aprovar/recusar/finalizar) e adicionar
+        // dados da visita (visitLocation, visitaData, visitNotes).
         (resource.data.protetorId == request.auth.uid
-          && request.resource.data.status in ['visita_agendada', 'cancelado', 'adotado'])
+          && request.resource.data.status in ['visita_agendada', 'cancelado', 'adotado', 'nao_adotado'])
         // Adotante pode cancelar a própria solicitação
         || (resource.data.adotanteId == request.auth.uid
           && request.resource.data.status == 'cancelado')

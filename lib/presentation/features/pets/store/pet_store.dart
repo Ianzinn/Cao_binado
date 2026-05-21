@@ -89,9 +89,10 @@ abstract class _PetStore with Store {
 
   @action
   Future<void> pickImage() async {
-    final xFile =
-        await _picker.pickImage(source: ImageSource.gallery, imageQuality: 80);
-    if (xFile != null) selectedImages.add(File(xFile.path));
+    final xFiles = await _picker.pickMultiImage(imageQuality: 80);
+    for (final xFile in xFiles) {
+      selectedImages.add(File(xFile.path));
+    }
   }
 
   @action

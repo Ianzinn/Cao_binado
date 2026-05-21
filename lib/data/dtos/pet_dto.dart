@@ -12,9 +12,11 @@ class PetDto {
       idade: d['idade'] as String? ?? '',
       porte: d['porte'] as String? ?? '',
       descricao: d['descricao'] as String? ?? '',
-      status: (d['status'] as String?) == 'adotado'
-          ? PetStatus.adotado
-          : PetStatus.disponivel,
+      status: switch (d['status'] as String? ?? '') {
+        'adotado' => PetStatus.adotado,
+        'visita_agendada' => PetStatus.visitaAgendada,
+        _ => PetStatus.disponivel,
+      },
       protetorId: d['protetorId'] as String,
       fotosUrls: List<String>.from(d['fotosUrls'] as List? ?? []),
       criadoEm: (d['criadoEm'] as Timestamp).toDate(),
@@ -28,7 +30,11 @@ class PetDto {
         'idade': model.idade,
         'porte': model.porte,
         'descricao': model.descricao,
-        'status': model.status == PetStatus.adotado ? 'adotado' : 'disponivel',
+        'status': switch (model.status) {
+          PetStatus.adotado => 'adotado',
+          PetStatus.visitaAgendada => 'visita_agendada',
+          PetStatus.disponivel => 'disponivel',
+        },
         'protetorId': model.protetorId,
         'fotosUrls': model.fotosUrls,
         'criadoEm': Timestamp.fromDate(model.criadoEm),

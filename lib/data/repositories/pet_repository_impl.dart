@@ -18,6 +18,10 @@ class PetRepositoryImpl implements PetRepository {
       _datasource.updatePetPhotos(petId, fotosUrls);
 
   @override
+  Future<void> updatePetStatus(String petId, String status) =>
+      _datasource.updatePetStatus(petId, status);
+
+  @override
   Future<PetModel?> getPetById(String id) => _datasource.getPetById(id);
 
   @override

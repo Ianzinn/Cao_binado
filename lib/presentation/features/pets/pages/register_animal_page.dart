@@ -56,40 +56,25 @@ class _RegisterAnimalPageState extends State<RegisterAnimalPage> {
             Observer(
               builder: (_) {
                 final images = _store.selectedImages;
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (images.isNotEmpty)
-                      SizedBox(
-                        height: 110,
-                        child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: images.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(width: 10),
-                          itemBuilder: (_, i) => _SelectedImageTile(
-                            file: images[i],
-                            onRemove: () => _store.removeImage(i),
-                          ),
-                        ),
-                      ),
-                    if (images.isNotEmpty) const SizedBox(height: 10),
-                    GestureDetector(
-                      onTap: _store.pickImage,
-                      child: Row(
-                        children: [
-                          const Icon(Icons.add_circle_outline_rounded,
-                              color: AppColors.textPrimary, size: 18),
-                          const SizedBox(width: 6),
-                          Text(
-                            'Adicionar Imagem',
-                            style: GoogleFonts.poppins(
-                                fontSize: 14, fontWeight: FontWeight.w500),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                if (images.isEmpty) {
+                  return _PhotoEmptyState(onTap: _store.pickImage);
+                }
+                return SizedBox(
+                  height: 110,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: images.length + 1,
+                    separatorBuilder: (_, __) => const SizedBox(width: 10),
+                    itemBuilder: (_, i) {
+                      if (i == images.length) {
+                        return _AddMoreTile(onTap: _store.pickImage);
+                      }
+                      return _SelectedImageTile(
+                        file: images[i],
+                        onRemove: () => _store.removeImage(i),
+                      );
+                    },
+                  ),
                 );
               },
             ),
@@ -243,6 +228,91 @@ class _SelectedImageTile extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _AddMoreTile extends StatelessWidget {
+  const _AddMoreTile({required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 110,
+        height: 110,
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.input),
+          border: Border.all(color: AppColors.divider, width: 1.5),
+        ),
+        child: const Icon(Icons.add_rounded,
+            size: 36, color: AppColors.textSecondary),
+      ),
+    );
+  }
+}
+
+class _PhotoEmptyState extends StatelessWidget {
+  const _PhotoEmptyState({required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding:
+            const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.card),
+          border: Border.all(color: AppColors.divider, width: 1.5),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.camera_alt_outlined,
+                size: 44, color: AppColors.textSecondary),
+            const SizedBox(height: 10),
+            Text(
+              'Adicione fotos do seu pet',
+              style: GoogleFonts.poppins(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'As fotos ajudam outras pessoas\na conhecer melhor seu pet',
+              style: GoogleFonts.poppins(
+                  fontSize: 12, color: AppColors.textSecondary),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 24, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppColors.primary,
+                borderRadius: BorderRadius.circular(AppRadius.button),
+              ),
+              child: Text(
+                'Selecionar fotos',
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -35,6 +35,13 @@ abstract class AdoptionRepository {
   /// Recusa: status = cancelado.
   Future<void> rejectAdoption(String adoptionId);
 
+  /// Finaliza visita: se adotado, pet→adotado; se não, pet→disponivel (atômico).
+  Future<void> finalizeVisit({
+    required String adoptionId,
+    required String petId,
+    required bool adopted,
+  });
+
   /// Visita agendada não vista ainda pelo adotante (mostrar no launch).
   Future<AdoptionModel?> findPendingVisitNotification(String adotanteId);
 
