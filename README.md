@@ -138,43 +138,59 @@ lib/
 ## Fluxo completo de adoção
 
 ```
-[Adotante] Solicita adoção de um pet
+[Adotante] Solicita adoção de um pet  →  status: interesse
                     │
                     ▼
-[Admin] Recebe notificação in-app ao entrar na home
-        Badge com contagem de solicitações pendentes
+[Admin] Recebe notificação in-app (bottomsheet + badge na home)
                     │
                     ▼
-[Admin] Analisa a solicitação
-        ┌───────────────────────┐
-        │  Aprovar  │  Recusar  │
-        └─────┬─────────────────┘
-              │ Aprovar
-              ▼
-[Admin] Agenda a visita
-        (data, horário, local, observações)
+              Aprovar?
+             /        \
+           Sim         Não → status: cancelado
+            │               (pet permanece disponível;
+            │                adotante não é notificado)
+            ▼
+[Admin] Agenda a visita (data, local, observações)
+        status: visita_agendada
                     │
                     ▼
-[Adotante] Recebe notificação in-app da visita agendada
-           Pode: "Entendi" | "Solicitar reagendamento" | "Cancelar"
+[Adotante] Recebe notificação in-app com os detalhes da visita
                     │
-        ┌───────────┴────────────────────┐
-        │ Solicitar reagendamento        │ Prosseguir
-        ▼                               ▼
-[Adotante] Propõe nova data e motivo   Visita acontece
-                    │                       │
-                    ▼                       ▼
-        [Admin] Analisa proposta    [Admin] Registra resultado
-        ┌──────────────────────┐      ┌──────────────┐
-        │ Confirmar │ Manter   │      │  Adotado     │
-        └─────┬─────────┬──────┘      │  Não adotado │
-              │         │             └──────┬───────┘
-              ▼         ▼                    │
-        Nova data   Data original     Adotado: pet → "adotado"
-        confirmada  mantida           Não adotado: pet → disponível
-        Adotante    Adotante recebe            novamente
-        notificado  notificação de
-                    recusa
+          ┌─────────┼──────────────┐
+          │         │              │
+        Entendi  Solicitar      Cancelar
+          │      reagend.       solicitação
+          │         │               │
+          │         ▼               ▼
+          │  [Adotante] Propõe  status: cancelado
+          │  nova data e motivo (pet permanece disponível)
+          │  status: reagend._pendente
+          │         │
+          │         ▼
+          │   [Admin] Analisa proposta de reagendamento
+          │        /              \
+          │   Confirmar          Manter data original
+          │       │                      │
+          │       ▼                      ▼
+          │  visitaData atualizada   data original mantida
+          │  status: visita_agendada  status: visita_agendada
+          │  Adotante notificado     Adotante notificado
+          │  (nova visita)           (reagendamento recusado)
+          │       │                      │
+          └───────┴──────────────────────┘
+                    │
+                    ▼
+              Visita acontece
+                    │
+                    ▼
+          [Admin] Registra resultado
+               /            \
+           Adotado        Não adotado
+              │                │
+              ▼                ▼
+     pet → "adotado"   pet → "disponivel"
+     adoção → "adotado" adoção → "nao_adotado"
+                         (aceita novas solicitações)
 ```
 
 ### Status do processo de adoção
