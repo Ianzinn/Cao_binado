@@ -38,6 +38,10 @@ service cloud.firestore {
         // Adotante pode cancelar a própria solicitação
         || (resource.data.adotanteId == request.auth.uid
           && request.resource.data.status == 'cancelado')
+        // Adotante pode solicitar reagendamento (só a partir de visita_agendada)
+        || (resource.data.adotanteId == request.auth.uid
+          && resource.data.status == 'visita_agendada'
+          && request.resource.data.status == 'reagendamento_pendente')
         // Adotante pode marcar como visto (viewedByAdotante=true) sem
         // mudar mais nada — usado quando fecha o bottom sheet de visita.
         || (resource.data.adotanteId == request.auth.uid

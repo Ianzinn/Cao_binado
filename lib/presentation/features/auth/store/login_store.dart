@@ -60,6 +60,8 @@ abstract class _LoginStore with Store {
   @action
   void togglePasswordVisibility() => isPasswordVisible = !isPasswordVisible;
 
+
+
   Future<bool> login() async {
     final success = await _authStore.login(email, password);
     if (success) {

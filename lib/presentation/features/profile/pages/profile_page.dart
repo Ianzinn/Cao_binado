@@ -112,6 +112,14 @@ class _ProfilePageState extends State<ProfilePage> {
                     onTap: () => context.push('/account-info'),
                   ),
                   const Divider(height: 1, color: AppColors.divider),
+                  if (!_store.isAdmin) ...[
+                    _MenuItem(
+                      icon: Icons.volunteer_activism_rounded,
+                      label: 'Minhas Adoções',
+                      onTap: () => context.push('/my-adoptions'),
+                    ),
+                    const Divider(height: 1, color: AppColors.divider),
+                  ],
                   _MenuItem(
                     icon: Icons.pets_rounded,
                     label: 'Histórico',

@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mobx/mobx.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/services/biometric_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../domain/repositories/adoption_repository.dart';
 import '../../../../shared/widgets/app_bottom_nav_bar.dart';
 import '../../../../shared/widgets/user_avatar.dart';
+import '../../adoption/widgets/new_request_bottom_sheet.dart';
 import '../../adoption/widgets/visit_scheduled_bottom_sheet.dart';
 import '../../auth/store/auth_store.dart';
 import '../store/home_store.dart';
@@ -23,15 +25,48 @@ class _HomePageState extends State<HomePage> {
   late final HomeStore _store;
   bool _biometricSheetShown = false;
   bool _visitSheetShown = false;
+  bool _adminNotifShown = false;
+  ReactionDisposer? _adminNotifDisposer;
 
   @override
   void initState() {
     super.initState();
     _store = getIt<HomeStore>();
+    _setupAdminNotification();
     _store.initialize();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await _maybeOfferBiometric();
       if (mounted) await _maybeShowVisitNotification();
+    });
+  }
+
+  @override
+  void dispose() {
+    _adminNotifDisposer?.call();
+    super.dispose();
+  }
+
+  void _setupAdminNotification() {
+    _adminNotifDisposer = autorun((_) {
+      final request = _store.newAdminRequest;
+      if (request == null || _adminNotifShown || !mounted) return;
+      _adminNotifShown = true;
+      _store.clearAdminNotification();
+      final captured = request;
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) return;
+        final goToRequests = await showModalBottomSheet<bool>(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: AppColors.background,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          builder: (_) => NewRequestBottomSheet(adoption: captured),
+        );
+        _adminNotifShown = false;
+        if (mounted && goToRequests == true) context.go('/adoption-requests');
+      });
     });
   }
 
@@ -46,7 +81,7 @@ class _HomePageState extends State<HomePage> {
     if (!mounted) return;
     _visitSheetShown = true;
     debugPrint('📨 Showing VisitScheduledBottomSheet for ${pending.id}');
-    await showModalBottomSheet(
+    final result = await showModalBottomSheet<VisitSheetResult>(
       context: context,
       isScrollControlled: true,
       isDismissible: false,
@@ -56,9 +91,12 @@ class _HomePageState extends State<HomePage> {
       ),
       builder: (_) => VisitScheduledBottomSheet(adoption: pending),
     );
-    // Marca como visto após o fechamento (Entendi ou swipe-down só
-    // funciona se isDismissible: true — aqui forçamos o tap em Entendi).
     await repo.markVisitNotificationViewed(pending.id);
+    if (!mounted) return;
+    if (result == VisitSheetResult.reschedule ||
+        result == VisitSheetResult.cancel) {
+      context.push('/my-adoptions');
+    }
   }
 
   Future<void> _maybeOfferBiometric() async {
@@ -117,7 +155,14 @@ class _HomePageState extends State<HomePage> {
             children: [
               _TopBar(
                 userName: _store.userName,
+                isAdmin: _store.isAdmin,
+                badgeCount: _store.isAdmin
+                    ? _store.adminPendingCount
+                    : _store.userUnreadCount,
                 onProfileTap: () => context.go('/profile'),
+                onNotificationTap: () => _store.isAdmin
+                    ? context.go('/adoption-requests')
+                    : context.push('/my-adoptions'),
               ),
               Expanded(
                 child: SingleChildScrollView(
@@ -173,22 +218,41 @@ class _HomePageState extends State<HomePage> {
                                 ),
                               ],
                             )
-                          : Row(
+                          : Column(
                               children: [
-                                Expanded(
-                                  child: _ActionCard(
-                                    label: 'Favoritos',
-                                    icon: Icons.star_border_rounded,
-                                    onTap: () => context.go('/favorites'),
-                                  ),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: _ActionCard(
+                                        label: 'Favoritos',
+                                        icon: Icons.star_border_rounded,
+                                        onTap: () => context.go('/favorites'),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: _ActionCard(
+                                        label: 'Encontrar',
+                                        icon: Icons.pets_rounded,
+                                        onTap: () => context.go('/find'),
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: _ActionCard(
-                                    label: 'Encontrar',
-                                    icon: Icons.pets_rounded,
-                                    onTap: () => context.go('/find'),
-                                  ),
+                                const SizedBox(height: 16),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: _ActionCard(
+                                        label: 'Minhas Adoções',
+                                        icon: Icons.volunteer_activism_rounded,
+                                        onTap: () =>
+                                            context.go('/my-adoptions'),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    const Expanded(child: SizedBox.shrink()),
+                                  ],
                                 ),
                               ],
                             ),
@@ -212,26 +276,75 @@ class _HomePageState extends State<HomePage> {
 }
 
 class _TopBar extends StatelessWidget {
-  const _TopBar({required this.userName, required this.onProfileTap});
+  const _TopBar({
+    required this.userName,
+    required this.onProfileTap,
+    required this.onNotificationTap,
+    required this.badgeCount,
+    required this.isAdmin,
+  });
   final String userName;
   final VoidCallback onProfileTap;
+  final VoidCallback onNotificationTap;
+  final int badgeCount;
+  final bool isAdmin;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          Text(
-            'Olá, $userName',
-            style: GoogleFonts.poppins(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
+          Expanded(
+            child: Text(
+              'Olá, $userName',
+              style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
             ),
           ),
-          const SizedBox(width: 12),
+          // Ícone de notificação com badge
+          GestureDetector(
+            onTap: onNotificationTap,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Icon(
+                  isAdmin
+                      ? Icons.mail_outline_rounded
+                      : Icons.notifications_none_rounded,
+                  size: 28,
+                  color: AppColors.textPrimary,
+                ),
+                if (badgeCount > 0)
+                  Positioned(
+                    top: -4,
+                    right: -4,
+                    child: Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: const BoxDecoration(
+                        color: AppColors.statusCancelled,
+                        shape: BoxShape.circle,
+                      ),
+                      constraints:
+                          const BoxConstraints(minWidth: 16, minHeight: 16),
+                      child: Text(
+                        badgeCount > 9 ? '9+' : '$badgeCount',
+                        style: const TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 14),
           GestureDetector(
             onTap: onProfileTap,
             child: const CurrentUserAvatar(size: 48),

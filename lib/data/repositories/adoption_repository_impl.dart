@@ -80,4 +80,36 @@ class AdoptionRepositoryImpl implements AdoptionRepository {
   @override
   Future<void> markVisitNotificationViewed(String adoptionId) =>
       _datasource.markVisitNotificationViewed(adoptionId);
+
+  @override
+  Future<void> requestReschedule({
+    required String adoptionId,
+    required DateTime newDateTime,
+    required String reason,
+  }) =>
+      _datasource.requestReschedule(
+        adoptionId: adoptionId,
+        newDateTime: newDateTime,
+        reason: reason,
+      );
+
+  @override
+  Future<void> approveReschedule(String adoptionId) =>
+      _datasource.approveReschedule(adoptionId);
+
+  @override
+  Future<void> rejectReschedule(String adoptionId) =>
+      _datasource.rejectReschedule(adoptionId);
+
+  @override
+  Future<void> cancelAdoptionByAdotante(String adoptionId) =>
+      _datasource.cancelAdoptionByAdotante(adoptionId);
+
+  @override
+  Stream<List<AdoptionModel>> getActiveAdoptionsByAdotante(String adotanteId) =>
+      _datasource.getActiveAdoptionsByAdotante(adotanteId);
+
+  @override
+  Stream<int> getUnreadNotificationCountForAdotante(String adotanteId) =>
+      _datasource.getUnreadNotificationCountForAdotante(adotanteId);
 }

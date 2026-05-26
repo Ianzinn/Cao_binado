@@ -1,7 +1,9 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shimmer/shimmer.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../domain/models/pet_model.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -20,6 +22,7 @@ class FindPage extends StatefulWidget {
 class _FindPageState extends State<FindPage> {
   late final FindStore _store;
   late final FavoritesStore _favorites;
+  bool _precached = false;
 
   @override
   void initState() {
@@ -34,6 +37,20 @@ class _FindPageState extends State<FindPage> {
   void dispose() {
     _favorites.dispose();
     super.dispose();
+  }
+
+  void _precacheImages() {
+    if (_precached) return;
+    _precached = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      for (final pet in _store.pets) {
+        final url = pet.primeiraFotoUrl;
+        if (url != null) {
+          precacheImage(CachedNetworkImageProvider(url), context);
+        }
+      }
+    });
   }
 
   @override
@@ -64,6 +81,7 @@ class _FindPageState extends State<FindPage> {
             );
           }
           if (_store.pets.isEmpty) {
+            _precached = false;
             return Center(
               child: Text(
                 'Nenhum pet disponível no momento.',
@@ -74,6 +92,7 @@ class _FindPageState extends State<FindPage> {
               ),
             );
           }
+          _precacheImages();
           return ListView.separated(
             padding: const EdgeInsets.all(16),
             itemCount: _store.pets.length,
@@ -160,10 +179,17 @@ class _FindPetCard extends StatelessWidget {
                     height: 140,
                     color: AppColors.surface,
                     child: pet.primeiraFotoUrl != null
-                        ? Image.network(
-                            pet.primeiraFotoUrl!,
+                        ? CachedNetworkImage(
+                            imageUrl: pet.primeiraFotoUrl!,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => const Icon(
+                            fadeInDuration:
+                                const Duration(milliseconds: 200),
+                            placeholder: (_, __) => Shimmer.fromColors(
+                              baseColor: AppColors.surface,
+                              highlightColor: Colors.white,
+                              child: Container(color: Colors.white),
+                            ),
+                            errorWidget: (_, __, ___) => const Icon(
                               Icons.pets_rounded,
                               size: 56,
                               color: AppColors.textSecondary,

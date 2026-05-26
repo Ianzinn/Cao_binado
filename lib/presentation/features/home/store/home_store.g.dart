@@ -78,6 +78,60 @@ mixin _$HomeStore on _HomeStore, Store {
     });
   }
 
+  late final _$adminPendingCountAtom = Atom(
+    name: '_HomeStore.adminPendingCount',
+    context: context,
+  );
+
+  @override
+  int get adminPendingCount {
+    _$adminPendingCountAtom.reportRead();
+    return super.adminPendingCount;
+  }
+
+  @override
+  set adminPendingCount(int value) {
+    _$adminPendingCountAtom.reportWrite(value, super.adminPendingCount, () {
+      super.adminPendingCount = value;
+    });
+  }
+
+  late final _$newAdminRequestAtom = Atom(
+    name: '_HomeStore.newAdminRequest',
+    context: context,
+  );
+
+  @override
+  AdoptionModel? get newAdminRequest {
+    _$newAdminRequestAtom.reportRead();
+    return super.newAdminRequest;
+  }
+
+  @override
+  set newAdminRequest(AdoptionModel? value) {
+    _$newAdminRequestAtom.reportWrite(value, super.newAdminRequest, () {
+      super.newAdminRequest = value;
+    });
+  }
+
+  late final _$userUnreadCountAtom = Atom(
+    name: '_HomeStore.userUnreadCount',
+    context: context,
+  );
+
+  @override
+  int get userUnreadCount {
+    _$userUnreadCountAtom.reportRead();
+    return super.userUnreadCount;
+  }
+
+  @override
+  set userUnreadCount(int value) {
+    _$userUnreadCountAtom.reportWrite(value, super.userUnreadCount, () {
+      super.userUnreadCount = value;
+    });
+  }
+
   late final _$initializeAsyncAction = AsyncAction(
     '_HomeStore.initialize',
     context: context,
@@ -88,12 +142,32 @@ mixin _$HomeStore on _HomeStore, Store {
     return _$initializeAsyncAction.run(() => super.initialize());
   }
 
+  late final _$_HomeStoreActionController = ActionController(
+    name: '_HomeStore',
+    context: context,
+  );
+
+  @override
+  void clearAdminNotification() {
+    final _$actionInfo = _$_HomeStoreActionController.startAction(
+      name: '_HomeStore.clearAdminNotification',
+    );
+    try {
+      return super.clearAdminNotification();
+    } finally {
+      _$_HomeStoreActionController.endAction(_$actionInfo);
+    }
+  }
+
   @override
   String toString() {
     return '''
 totalDonations: ${totalDonations},
 adoptedAnimals: ${adoptedAnimals},
 currentDate: ${currentDate},
+adminPendingCount: ${adminPendingCount},
+newAdminRequest: ${newAdminRequest},
+userUnreadCount: ${userUnreadCount},
 userName: ${userName},
 isAdmin: ${isAdmin}
     ''';

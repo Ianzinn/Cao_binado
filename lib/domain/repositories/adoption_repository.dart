@@ -47,4 +47,26 @@ abstract class AdoptionRepository {
 
   /// Marca notificação de visita como vista.
   Future<void> markVisitNotificationViewed(String adoptionId);
+
+  /// Adotante solicita reagendamento.
+  Future<void> requestReschedule({
+    required String adoptionId,
+    required DateTime newDateTime,
+    required String reason,
+  });
+
+  /// Protetor aceita o reagendamento.
+  Future<void> approveReschedule(String adoptionId);
+
+  /// Protetor recusa o reagendamento (mantém data original).
+  Future<void> rejectReschedule(String adoptionId);
+
+  /// Adotante cancela a solicitação.
+  Future<void> cancelAdoptionByAdotante(String adoptionId);
+
+  /// Stream das adoções ativas do adotante.
+  Stream<List<AdoptionModel>> getActiveAdoptionsByAdotante(String adotanteId);
+
+  /// Stream de contagem de notificações não lidas do adotante.
+  Stream<int> getUnreadNotificationCountForAdotante(String adotanteId);
 }

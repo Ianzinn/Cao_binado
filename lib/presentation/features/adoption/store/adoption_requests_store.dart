@@ -121,5 +121,35 @@ abstract class _AdoptionRequestsStore with Store {
     }
   }
 
+  @action
+  Future<bool> approveReschedule(AdoptionModel request) async {
+    isProcessing = true;
+    errorMessage = null;
+    try {
+      await _adoptionRepository.approveReschedule(request.id);
+      return true;
+    } catch (e) {
+      errorMessage = 'Não foi possível confirmar o reagendamento: $e';
+      return false;
+    } finally {
+      isProcessing = false;
+    }
+  }
+
+  @action
+  Future<bool> rejectReschedule(AdoptionModel request) async {
+    isProcessing = true;
+    errorMessage = null;
+    try {
+      await _adoptionRepository.rejectReschedule(request.id);
+      return true;
+    } catch (e) {
+      errorMessage = 'Não foi possível recusar o reagendamento: $e';
+      return false;
+    } finally {
+      isProcessing = false;
+    }
+  }
+
   void dispose() => _sub?.cancel();
 }

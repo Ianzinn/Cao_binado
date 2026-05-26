@@ -2,9 +2,11 @@
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:mobx/mobx.dart';
+import '../../../../core/di/injection.dart';
 import '../../../../core/services/biometric_service.dart';
 import '../../../../domain/repositories/storage_repository.dart';
 import '../../auth/store/auth_store.dart';
+import '../../home/store/home_store.dart';
 
 part 'profile_store.g.dart';
 
@@ -40,6 +42,9 @@ abstract class _ProfileStore with Store {
     await _biometric.disable();
     biometricEnabled = false;
   }
+
+  @computed
+  bool get isAdmin => _authStore.isAdmin;
 
   @computed
   String get userName => _authStore.displayName;
@@ -86,6 +91,8 @@ abstract class _ProfileStore with Store {
       // Sessão expirada (Firebase) NÃO passa por aqui, então mantém biometria.
       await _biometric.disable();
       biometricEnabled = false;
+      getIt<HomeStore>().dispose();
+      getIt.resetLazySingleton<HomeStore>();
       await _authStore.logout();
     } finally {
       isLoading = false;

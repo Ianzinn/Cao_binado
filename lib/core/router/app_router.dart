@@ -19,6 +19,7 @@ import '../../presentation/features/history/pages/history_page.dart';
 import '../../presentation/features/adoption/pages/adoption_success_page.dart';
 import '../../presentation/features/adoption/pages/adoption_requests_page.dart';
 import '../../presentation/features/adoption/pages/adopter_profile_page.dart';
+import '../../presentation/features/adoption/pages/my_adoptions_page.dart';
 import '../../presentation/features/profile/pages/profile_page.dart';
 import '../../presentation/features/profile/pages/account_info_page.dart';
 import '../../domain/models/pet_model.dart';
@@ -142,6 +143,10 @@ final appRouter = GoRouter(
         if (uid == null) return const AdoptionRequestsPage();
         return AdopterProfilePage(userId: uid);
       },
+    ),
+    GoRoute(
+      path: '/my-adoptions',
+      builder: (_, __) => const MyAdoptionsPage(),
     ),
   ],
 );

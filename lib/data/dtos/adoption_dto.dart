@@ -21,6 +21,11 @@ class AdoptionDto {
       visitLocation: d['visitLocation'] as String?,
       visitNotes: d['visitNotes'] as String?,
       viewedByAdotante: d['viewedByAdotante'] as bool? ?? false,
+      rescheduleData: d['rescheduleData'] != null
+          ? (d['rescheduleData'] as Timestamp).toDate()
+          : null,
+      rescheduleReason: d['rescheduleReason'] as String?,
+      rescheduleRejected: d['rescheduleRejected'] as bool? ?? false,
     );
   }
 
@@ -38,5 +43,10 @@ class AdoptionDto {
         if (model.visitLocation != null) 'visitLocation': model.visitLocation,
         if (model.visitNotes != null) 'visitNotes': model.visitNotes,
         'viewedByAdotante': model.viewedByAdotante,
+        if (model.rescheduleData != null)
+          'rescheduleData': Timestamp.fromDate(model.rescheduleData!),
+        if (model.rescheduleReason != null)
+          'rescheduleReason': model.rescheduleReason,
+        if (model.rescheduleRejected) 'rescheduleRejected': true,
       };
 }

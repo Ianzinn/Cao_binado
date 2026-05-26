@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../domain/models/adoption_model.dart';
 
+enum VisitSheetResult { dismiss, reschedule, cancel }
+
 class VisitScheduledBottomSheet extends StatelessWidget {
   const VisitScheduledBottomSheet({super.key, required this.adoption});
 
@@ -10,6 +12,7 @@ class VisitScheduledBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isRejected = adoption.rescheduleRejected;
     final dt = adoption.visitaData;
     final dateStr = dt != null ? _formatDate(dt) : '—';
     final timeStr = dt != null ? _formatTime(dt) : '—';
@@ -32,12 +35,15 @@ class VisitScheduledBottomSheet extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           Center(
-            child: Icon(Icons.pets_rounded,
-                size: 56, color: AppColors.accent),
+            child: Icon(
+              isRejected ? Icons.event_busy_rounded : Icons.pets_rounded,
+              size: 56,
+              color: isRejected ? Colors.orange : AppColors.accent,
+            ),
           ),
           const SizedBox(height: 12),
           Text(
-            'Visita agendada',
+            isRejected ? 'Reagendamento recusado' : 'Visita agendada',
             textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
               fontSize: 22,
@@ -47,7 +53,9 @@ class VisitScheduledBottomSheet extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'Seu pedido de adoção foi aprovado! Anota aí os detalhes da visita.',
+            isRejected
+                ? 'O protetor não pôde aceitar sua proposta. A visita foi mantida na data original.'
+                : 'Seu pedido de adoção foi aprovado! Anota aí os detalhes da visita.',
             textAlign: TextAlign.center,
             style: GoogleFonts.poppins(
               fontSize: 13,
@@ -72,7 +80,7 @@ class VisitScheduledBottomSheet extends StatelessWidget {
             ),
           const SizedBox(height: 24),
           GestureDetector(
-            onTap: () => Navigator.of(context).pop(),
+            onTap: () => Navigator.of(context).pop(VisitSheetResult.dismiss),
             child: Container(
               height: 52,
               decoration: BoxDecoration(
@@ -87,6 +95,37 @@ class VisitScheduledBottomSheet extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                   color: Colors.white,
                 ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          GestureDetector(
+            onTap: () => Navigator.of(context).pop(VisitSheetResult.reschedule),
+            child: Container(
+              height: 48,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(99),
+                border: Border.all(color: AppColors.accent, width: 1.5),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                'Solicitar reagendamento',
+                style: GoogleFonts.poppins(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.accent,
+                ),
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(VisitSheetResult.cancel),
+            child: Text(
+              'Cancelar solicitação',
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                color: AppColors.statusCancelled,
               ),
             ),
           ),

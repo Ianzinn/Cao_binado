@@ -121,6 +121,42 @@ mixin _$AdoptionRequestsStore on _AdoptionRequestsStore, Store {
     return _$rejectAsyncAction.run(() => super.reject(request));
   }
 
+  late final _$finalizeVisitAsyncAction = AsyncAction(
+    '_AdoptionRequestsStore.finalizeVisit',
+    context: context,
+  );
+
+  @override
+  Future<bool> finalizeVisit(AdoptionModel request, {required bool adopted}) {
+    return _$finalizeVisitAsyncAction.run(
+      () => super.finalizeVisit(request, adopted: adopted),
+    );
+  }
+
+  late final _$approveRescheduleAsyncAction = AsyncAction(
+    '_AdoptionRequestsStore.approveReschedule',
+    context: context,
+  );
+
+  @override
+  Future<bool> approveReschedule(AdoptionModel request) {
+    return _$approveRescheduleAsyncAction.run(
+      () => super.approveReschedule(request),
+    );
+  }
+
+  late final _$rejectRescheduleAsyncAction = AsyncAction(
+    '_AdoptionRequestsStore.rejectReschedule',
+    context: context,
+  );
+
+  @override
+  Future<bool> rejectReschedule(AdoptionModel request) {
+    return _$rejectRescheduleAsyncAction.run(
+      () => super.rejectReschedule(request),
+    );
+  }
+
   late final _$_AdoptionRequestsStoreActionController = ActionController(
     name: '_AdoptionRequestsStore',
     context: context,

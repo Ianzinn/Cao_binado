@@ -48,6 +48,7 @@ import '../../presentation/features/history/store/history_store.dart';
 
 // Presentation — Adoption Requests store
 import '../../presentation/features/adoption/store/adoption_requests_store.dart';
+import '../../presentation/features/adoption/store/my_adoptions_store.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -94,7 +95,7 @@ void setupInjection() {
   getIt.registerFactory<RegisterStore>(
     () => RegisterStore(getIt<AuthStore>(), getIt<StorageRepository>()),
   );
-  getIt.registerFactory<HomeStore>(
+  getIt.registerLazySingleton<HomeStore>(
     () => HomeStore(getIt<AuthStore>(), getIt<AdoptionRepository>()),
   );
   getIt.registerFactory<ProfileStore>(
@@ -137,6 +138,12 @@ void setupInjection() {
   );
   getIt.registerFactory<AdoptionRequestsStore>(
     () => AdoptionRequestsStore(
+      getIt<AdoptionRepository>(),
+      getIt<AuthStore>(),
+    ),
+  );
+  getIt.registerFactory<MyAdoptionsStore>(
+    () => MyAdoptionsStore(
       getIt<AdoptionRepository>(),
       getIt<AuthStore>(),
     ),

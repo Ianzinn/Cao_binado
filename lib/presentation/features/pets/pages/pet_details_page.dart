@@ -1,4 +1,6 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -30,6 +32,12 @@ class _PetDetailsPageState extends State<PetDetailsPage> {
     _findStore = getIt<FindStore>();
     _favoritesStore = getIt<FavoritesStore>();
     _favoritesStore.start();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      for (final url in widget.pet.fotosUrls) {
+        precacheImage(CachedNetworkImageProvider(url), context);
+      }
+    });
   }
 
   @override
@@ -215,25 +223,25 @@ class _Gallery extends StatelessWidget {
                     onPageChanged: onPageChanged,
                     itemCount: photos.length,
                     itemBuilder: (_, i) {
-                      final image = Image.network(
-                        photos[i],
+                      final image = CachedNetworkImage(
+                        imageUrl: photos[i],
                         fit: BoxFit.cover,
-                        loadingBuilder: (_, child, progress) {
-                          if (progress == null) return child;
-                          return Container(
-                            color: AppColors.surface,
-                            child: const Center(
-                              child: CircularProgressIndicator(),
-                            ),
-                          );
-                        },
-                        errorBuilder: (_, __, ___) =>
+                        fadeInDuration: const Duration(milliseconds: 200),
+                        placeholder: (_, __) => Shimmer.fromColors(
+                          baseColor: AppColors.surface,
+                          highlightColor: Colors.white,
+                          child: Container(color: Colors.white),
+                        ),
+                        errorWidget: (_, __, ___) =>
                             const _NoPhotoPlaceholder(),
                       );
-                      // Hero apenas na primeira foto (a que aparece no card).
-                      return i == 0
-                          ? Hero(tag: pet.id, child: image)
-                          : image;
+                      final tappable = GestureDetector(
+                        onTap: () => _openFullscreen(context, photos, i),
+                        child: i == 0
+                            ? Hero(tag: pet.id, child: image)
+                            : image,
+                      );
+                      return tappable;
                     },
                   ),
           ),
@@ -441,6 +449,124 @@ class _ChipEntry {
   const _ChipEntry({required this.icon, required this.label});
   final IconData icon;
   final String label;
+}
+
+void _openFullscreen(BuildContext context, List<String> photos, int index) {
+  Navigator.of(context).push(
+    PageRouteBuilder(
+      opaque: false,
+      barrierColor: Colors.black,
+      pageBuilder: (_, __, ___) =>
+          _FullscreenViewer(photos: photos, initialIndex: index),
+      transitionsBuilder: (_, animation, __, child) =>
+          FadeTransition(opacity: animation, child: child),
+      transitionDuration: const Duration(milliseconds: 200),
+    ),
+  );
+}
+
+class _FullscreenViewer extends StatefulWidget {
+  const _FullscreenViewer({required this.photos, required this.initialIndex});
+  final List<String> photos;
+  final int initialIndex;
+
+  @override
+  State<_FullscreenViewer> createState() => _FullscreenViewerState();
+}
+
+class _FullscreenViewerState extends State<_FullscreenViewer> {
+  late final PageController _ctrl;
+  late int _current;
+
+  @override
+  void initState() {
+    super.initState();
+    _current = widget.initialIndex;
+    _ctrl = PageController(initialPage: widget.initialIndex);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          PageView.builder(
+            controller: _ctrl,
+            itemCount: widget.photos.length,
+            onPageChanged: (i) => setState(() => _current = i),
+            itemBuilder: (_, i) => InteractiveViewer(
+              minScale: 1,
+              maxScale: 4,
+              child: Center(
+                child: CachedNetworkImage(
+                  imageUrl: widget.photos[i],
+                  fit: BoxFit.contain,
+                  fadeInDuration: const Duration(milliseconds: 150),
+                  placeholder: (_, __) => const Center(
+                    child: CircularProgressIndicator(color: Colors.white54),
+                  ),
+                  errorWidget: (_, __, ___) => const Icon(
+                    Icons.broken_image_outlined,
+                    color: Colors.white38,
+                    size: 64,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // Botão fechar
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 8,
+            right: 16,
+            child: GestureDetector(
+              onTap: () => Navigator.of(context).pop(),
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.black.withValues(alpha: 0.55),
+                ),
+                child: const Icon(Icons.close, color: Colors.white, size: 22),
+              ),
+            ),
+          ),
+          // Indicadores de página
+          if (widget.photos.length > 1)
+            Positioned(
+              bottom: MediaQuery.of(context).padding.bottom + 24,
+              left: 0,
+              right: 0,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(widget.photos.length, (i) {
+                  final active = i == _current;
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 250),
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    width: active ? 22 : 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: active
+                          ? Colors.white
+                          : Colors.white.withValues(alpha: 0.4),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  );
+                }),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 }
 
 String _humanizeEspecie(String raw) {

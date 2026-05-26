@@ -1,4 +1,6 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -72,6 +74,32 @@ class _AdoptionRequestsPageState extends State<AdoptionRequestsPage> {
         content: Text(ok
             ? 'Solicitação recusada.'
             : _store.errorMessage ?? 'Não foi possível recusar.'),
+        backgroundColor: ok ? AppColors.textSecondary : Colors.redAccent,
+      ),
+    );
+  }
+
+  Future<void> _approveReschedule(AdoptionModel request) async {
+    final ok = await _store.approveReschedule(request);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(ok
+            ? 'Reagendamento confirmado para ${request.adotanteNome}.'
+            : _store.errorMessage ?? 'Não foi possível confirmar o reagendamento.'),
+        backgroundColor: ok ? AppColors.accent : Colors.redAccent,
+      ),
+    );
+  }
+
+  Future<void> _rejectReschedule(AdoptionModel request) async {
+    final ok = await _store.rejectReschedule(request);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(ok
+            ? 'Reagendamento recusado. Visita mantida na data original.'
+            : _store.errorMessage ?? 'Não foi possível recusar o reagendamento.'),
         backgroundColor: ok ? AppColors.textSecondary : Colors.redAccent,
       ),
     );
@@ -157,6 +185,8 @@ class _AdoptionRequestsPageState extends State<AdoptionRequestsPage> {
                 onApprove: () => _approve(r),
                 onReject: () => _reject(r),
                 onFinalize: () => _finalizeVisit(r),
+                onApproveReschedule: () => _approveReschedule(r),
+                onRejectReschedule: () => _rejectReschedule(r),
                 onViewProfile: () =>
                     context.push('/adopter-profile', extra: r.adotanteId),
               ),
@@ -175,6 +205,8 @@ class _RequestCard extends StatelessWidget {
     required this.onApprove,
     required this.onReject,
     required this.onFinalize,
+    required this.onApproveReschedule,
+    required this.onRejectReschedule,
     required this.onViewProfile,
   });
 
@@ -183,10 +215,15 @@ class _RequestCard extends StatelessWidget {
   final VoidCallback onApprove;
   final VoidCallback onReject;
   final VoidCallback onFinalize;
+  final VoidCallback onApproveReschedule;
+  final VoidCallback onRejectReschedule;
   final VoidCallback onViewProfile;
 
   bool get _isVisitScheduled =>
       request.status == AdoptionStatusValues.visitaAgendada;
+
+  bool get _isReschedulePending =>
+      request.status == AdoptionStatusValues.reagendamentoPendente;
 
   @override
   Widget build(BuildContext context) {
@@ -250,8 +287,77 @@ class _RequestCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
+          // Reschedule proposal info
+          if (_isReschedulePending && request.rescheduleData != null) ...[
+            const SizedBox(height: 14),
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(AppRadius.input),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.schedule_rounded,
+                          size: 14, color: Colors.orange),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Proposta de reagendamento',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.orange,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _formatVisit(request.rescheduleData!),
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  if (request.rescheduleReason != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      'Motivo: ${request.rescheduleReason}',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 16),
           // Actions — differ by status
-          if (_isVisitScheduled)
+          if (_isReschedulePending)
+            Row(
+              children: [
+                Expanded(
+                  child: _SecondaryButton(
+                    label: 'Manter data',
+                    onTap: isProcessing ? null : onRejectReschedule,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _PrimaryButton(
+                    label: 'Confirmar',
+                    onTap: isProcessing ? null : onApproveReschedule,
+                  ),
+                ),
+              ],
+            )
+          else if (_isVisitScheduled)
             _PrimaryButton(
               label: 'Finalizar visita',
               onTap: isProcessing ? null : onFinalize,
@@ -278,6 +384,14 @@ class _RequestCard extends StatelessWidget {
       ),
     );
   }
+
+  String _formatVisit(DateTime dt) {
+    final date =
+        '${dt.day.toString().padLeft(2, '0')}/${dt.month.toString().padLeft(2, '0')}/${dt.year}';
+    final time =
+        '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+    return '$date às $time';
+  }
 }
 
 class _StatusBadge extends StatelessWidget {
@@ -287,10 +401,8 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (label, color) = switch (status) {
-      AdoptionStatusValues.visitaAgendada => (
-          'Visita agendada',
-          AppColors.statusOpen,
-        ),
+      AdoptionStatusValues.visitaAgendada => ('Visita agendada', AppColors.statusOpen),
+      AdoptionStatusValues.reagendamentoPendente => ('Reagendamento pendente', Colors.orange),
       AdoptionStatusValues.adotado => ('Adotado', AppColors.statusAdopted),
       _ => ('Aguardando', AppColors.textSecondary),
     };
@@ -392,12 +504,22 @@ class _Avatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (url != null && url!.isNotEmpty) {
-      return Image.network(
-        url!,
+      return CachedNetworkImage(
+        imageUrl: url!,
         width: size,
         height: size,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _fallback(),
+        fadeInDuration: const Duration(milliseconds: 150),
+        placeholder: (_, __) => Shimmer.fromColors(
+          baseColor: AppColors.surface,
+          highlightColor: Colors.white,
+          child: Container(
+            width: size,
+            height: size,
+            color: Colors.white,
+          ),
+        ),
+        errorWidget: (_, __, ___) => _fallback(),
       );
     }
     return _fallback();

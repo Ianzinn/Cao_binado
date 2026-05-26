@@ -1,4 +1,6 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:flutter_mobx/flutter_mobx.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -19,12 +21,27 @@ class FavoritesPage extends StatefulWidget {
 class _FavoritesPageState extends State<FavoritesPage> {
   late final FavoritesStore _store;
   final _searchCtrl = TextEditingController();
+  bool _precached = false;
 
   @override
   void initState() {
     super.initState();
     _store = getIt<FavoritesStore>();
     _store.start();
+  }
+
+  void _precacheImages(List<dynamic> list) {
+    if (_precached) return;
+    _precached = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      for (final pet in list) {
+        final url = pet.primeiraFotoUrl as String?;
+        if (url != null) {
+          precacheImage(CachedNetworkImageProvider(url), context);
+        }
+      }
+    });
   }
 
   @override
@@ -72,6 +89,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
                 }
                 final list = _store.filtered;
                 if (list.isEmpty) {
+                  _precached = false;
                   return Center(
                     child: Text(
                       'Nenhum favorito ainda.',
@@ -79,6 +97,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
                     ),
                   );
                 }
+                _precacheImages(list);
                 return ListView.separated(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   itemCount: list.length,
@@ -138,10 +157,16 @@ class _FavoriteCard extends StatelessWidget {
                 height: 90,
                 color: AppColors.divider,
                 child: pet.primeiraFotoUrl != null
-                    ? Image.network(
-                        pet.primeiraFotoUrl!,
+                    ? CachedNetworkImage(
+                        imageUrl: pet.primeiraFotoUrl!,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const Icon(
+                        fadeInDuration: const Duration(milliseconds: 200),
+                        placeholder: (_, __) => Shimmer.fromColors(
+                          baseColor: AppColors.divider,
+                          highlightColor: Colors.white,
+                          child: Container(color: Colors.white),
+                        ),
+                        errorWidget: (_, __, ___) => const Icon(
                           Icons.pets_rounded,
                           size: 40,
                           color: AppColors.textSecondary,

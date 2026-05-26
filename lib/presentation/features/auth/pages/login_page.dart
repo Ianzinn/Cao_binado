@@ -183,20 +183,6 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 );
               }),
-              const SizedBox(height: 32),
-              _OrDivider(),
-              const SizedBox(height: 20),
-              _SocialButton(
-                label: 'Entrar com o Google',
-                icon: const _GoogleIcon(),
-                onTap: () {/* TODO: Google Sign-In */},
-              ),
-              const SizedBox(height: 16),
-              _SocialButton(
-                label: 'Entrar com o Facebook',
-                icon: const Icon(Icons.facebook, color: Color(0xFF1877F2), size: 28),
-                onTap: () {/* TODO: Facebook Sign-In */},
-              ),
               const SizedBox(height: 28),
               Center(
                 child: GestureDetector(
@@ -361,88 +347,6 @@ class _PrimaryButton extends StatelessWidget {
               ),
       ),
     );
-  }
-}
-
-class _OrDivider extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        const Expanded(child: Divider(thickness: 1.5, color: Color(0xFFE0E0E0))),
-        const SizedBox(width: 12),
-        Container(
-          width: 46,
-          height: 46,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: AppColors.divider),
-            color: Colors.white,
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            'Ou',
-            style: GoogleFonts.roboto(
-              fontWeight: FontWeight.bold,
-              fontSize: 15,
-              color: AppColors.primary,
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        const Expanded(child: Divider(thickness: 1.5, color: Color(0xFFE0E0E0))),
-      ],
-    );
-  }
-}
-
-class _SocialButton extends StatelessWidget {
-  const _SocialButton({
-    required this.label,
-    required this.icon,
-    required this.onTap,
-  });
-
-  final String label;
-  final Widget icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 55,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(AppRadius.buttonSocial),
-          boxShadow: AppShadows.socialButton,
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(width: 32, height: 32, child: icon),
-            const SizedBox(width: 12),
-            Text(
-              label,
-              style: GoogleFonts.poppins(
-                fontSize: 15,
-                color: const Color(0xFF001833),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _GoogleIcon extends StatelessWidget {
-  const _GoogleIcon();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Icon(Icons.g_mobiledata_rounded, size: 28, color: Color(0xFF4285F4));
   }
 }
 
