@@ -38,6 +38,7 @@ import '../../presentation/features/pets/store/pet_store.dart';
 import '../../presentation/features/pets/store/find_store.dart';
 import '../../presentation/features/pets/store/favorites_store.dart';
 import '../../presentation/features/pets/store/register_animal_store.dart';
+import '../../presentation/features/pets/store/my_pets_store.dart';
 
 // Presentation — Adopters / Tutor stores
 import '../../presentation/features/adopters/store/adopters_store.dart';
@@ -128,6 +129,9 @@ void setupInjection() {
   );
   getIt.registerFactory<RegisterAnimalStore>(
     () => RegisterAnimalStore(getIt<PetStore>(), getIt<AuthStore>()),
+  );
+  getIt.registerFactory<MyPetsStore>(
+    () => MyPetsStore(getIt<PetRepository>(), getIt<AuthStore>()),
   );
   getIt.registerFactory<AdoptersStore>(
     () => AdoptersStore(getIt<AdoptionRepository>(), getIt<AuthStore>()),

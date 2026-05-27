@@ -213,7 +213,13 @@ class _HomePageState extends State<HomePage> {
                                       ),
                                     ),
                                     const SizedBox(width: 16),
-                                    const Expanded(child: SizedBox.shrink()),
+                                    Expanded(
+                                      child: _ActionCard(
+                                        label: 'Meus Pets',
+                                        icon: Icons.pets_rounded,
+                                        onTap: () => context.go('/my-pets'),
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ],

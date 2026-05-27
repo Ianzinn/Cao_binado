@@ -13,6 +13,8 @@ import '../../presentation/features/pets/pages/favorites_page.dart';
 import '../../presentation/features/pets/pages/find_page.dart';
 import '../../presentation/features/pets/pages/pet_details_page.dart';
 import '../../presentation/features/pets/pages/register_animal_page.dart';
+import '../../presentation/features/pets/pages/my_pets_page.dart';
+import '../../presentation/features/pets/pages/edit_animal_page.dart';
 import '../../presentation/features/adopters/pages/adopters_page.dart';
 import '../../presentation/features/adopters/pages/register_tutor_page.dart';
 import '../../presentation/features/history/pages/history_page.dart';
@@ -27,6 +29,8 @@ import '../../domain/models/pet_model.dart';
 const _publicRoutes = ['/', '/onboarding', '/login', '/register'];
 const _adminRoutes = [
   '/register-animal',
+  '/my-pets',
+  '/edit-animal',
   '/adopters',
   '/adoption-requests',
 ];
@@ -147,6 +151,18 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/my-adoptions',
       builder: (_, __) => const MyAdoptionsPage(),
+    ),
+    GoRoute(
+      path: '/my-pets',
+      builder: (_, __) => const MyPetsPage(),
+    ),
+    GoRoute(
+      path: '/edit-animal',
+      builder: (context, state) {
+        final pet = state.extra as PetModel?;
+        if (pet == null) return const MyPetsPage();
+        return EditAnimalPage(pet: pet);
+      },
     ),
   ],
 );
