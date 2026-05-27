@@ -49,5 +49,8 @@ app.*.map.json
 .env.*
 !.env.example
 lib/core/config/api_keys.dart
+lib/firebase_options.dart
 google-services.json
+**/google-services.json
 GoogleService-Info.plist
+**/GoogleService-Info.plist
