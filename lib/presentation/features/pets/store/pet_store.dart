@@ -88,6 +88,13 @@ abstract class _PetStore with Store {
   }
 
   @action
+  Future<void> applyFilters(String? especie, String? porte) {
+    especieFilter = especie;
+    porteFilter = porte;
+    return loadPets();
+  }
+
+  @action
   Future<void> pickImage() async {
     final xFiles = await _picker.pickMultiImage(imageQuality: 80);
     for (final xFile in xFiles) {

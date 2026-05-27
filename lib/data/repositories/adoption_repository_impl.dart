@@ -102,8 +102,16 @@ class AdoptionRepositoryImpl implements AdoptionRepository {
       _datasource.rejectReschedule(adoptionId);
 
   @override
-  Future<void> cancelAdoptionByAdotante(String adoptionId) =>
-      _datasource.cancelAdoptionByAdotante(adoptionId);
+  Future<void> cancelAdoptionByAdotante({
+    required String adoptionId,
+    required String petId,
+    required String currentAdoptionStatus,
+  }) =>
+      _datasource.cancelAdoptionByAdotante(
+        adoptionId: adoptionId,
+        petId: petId,
+        currentAdoptionStatus: currentAdoptionStatus,
+      );
 
   @override
   Stream<List<AdoptionModel>> getActiveAdoptionsByAdotante(String adotanteId) =>

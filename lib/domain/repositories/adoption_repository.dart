@@ -62,7 +62,12 @@ abstract class AdoptionRepository {
   Future<void> rejectReschedule(String adoptionId);
 
   /// Adotante cancela a solicitação.
-  Future<void> cancelAdoptionByAdotante(String adoptionId);
+  /// [currentAdoptionStatus] determina se o pet precisa voltar pra disponivel.
+  Future<void> cancelAdoptionByAdotante({
+    required String adoptionId,
+    required String petId,
+    required String currentAdoptionStatus,
+  });
 
   /// Stream das adoções ativas do adotante.
   Stream<List<AdoptionModel>> getActiveAdoptionsByAdotante(String adotanteId);

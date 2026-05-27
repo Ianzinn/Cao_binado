@@ -191,11 +191,29 @@ class AdoptionRemoteDatasource {
         'viewedByAdotante': false,
       });
 
-  /// Adotante cancela a solicitação — status → cancelado.
-  Future<void> cancelAdoptionByAdotante(String adoptionId) =>
-      _adoptions.doc(adoptionId).update({
-        'status': AdoptionStatusValues.cancelado,
-      });
+  /// Adotante cancela a solicitação.
+  /// Se o pet já saiu da listagem (visita_agendada / reagendamento_pendente),
+  /// devolve-o pra disponivel num batch atômico. Caso ainda esteja em interesse,
+  /// apenas atualiza a adoção (pet nunca saiu de disponivel).
+  Future<void> cancelAdoptionByAdotante({
+    required String adoptionId,
+    required String petId,
+    required String currentAdoptionStatus,
+  }) async {
+    final adoptionRef = _adoptions.doc(adoptionId);
+    final petNeedsReset = currentAdoptionStatus == AdoptionStatusValues.visitaAgendada
+        || currentAdoptionStatus == AdoptionStatusValues.reagendamentoPendente;
+
+    if (petNeedsReset) {
+      final petRef = _db.collection('pets').doc(petId);
+      final batch = _db.batch();
+      batch.update(adoptionRef, {'status': AdoptionStatusValues.cancelado});
+      batch.update(petRef, {'status': 'disponivel'});
+      await batch.commit();
+    } else {
+      await adoptionRef.update({'status': AdoptionStatusValues.cancelado});
+    }
+  }
 
   /// Stream de contagem de notificações não lidas do adotante.
   /// Usa apenas um filtro de igualdade — sem índice composto necessário.

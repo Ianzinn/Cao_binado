@@ -102,10 +102,10 @@ class _RegisterAnimalPageState extends State<RegisterAnimalPage> {
             const SizedBox(height: 14),
             Observer(
               builder: (_) => AppDropdownField(
-                label: 'Tipo',
-                hint: 'Selecione o tipo do animal',
+                label: 'Espécie',
+                hint: 'Selecione a espécie do animal',
                 value: _store.animalClass,
-                items: const ['Mamífero', 'Ave', 'Réptil'],
+                items: const ['Cachorro', 'Gato', 'Outros'],
                 onChanged: _store.setAnimalClass,
               ),
             ),

@@ -208,6 +208,18 @@ mixin _$PetStore on _PetStore, Store {
   }
 
   @override
+  Future<void> applyFilters(String? especie, String? porte) {
+    final _$actionInfo = _$_PetStoreActionController.startAction(
+      name: '_PetStore.applyFilters',
+    );
+    try {
+      return super.applyFilters(especie, porte);
+    } finally {
+      _$_PetStoreActionController.endAction(_$actionInfo);
+    }
+  }
+
+  @override
   void removeImage(int index) {
     final _$actionInfo = _$_PetStoreActionController.startAction(
       name: '_PetStore.removeImage',

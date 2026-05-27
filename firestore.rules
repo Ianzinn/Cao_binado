@@ -11,8 +11,15 @@ service cloud.firestore {
       allow read: if request.auth != null;
       allow create: if request.auth != null
         && request.resource.data.protetorId == request.auth.uid;
-      allow update: if request.auth != null
-        && resource.data.protetorId == request.auth.uid;
+      allow update: if request.auth != null && (
+        // Protetor atualiza seus próprios pets (qualquer campo)
+        resource.data.protetorId == request.auth.uid
+        // Adotante pode devolver o pet pra disponivel ao cancelar adoção:
+        // só o campo status pode mudar, de visita_agendada/reagendamento_pendente → disponivel
+        || (request.resource.data.status == 'disponivel'
+          && resource.data.status in ['visita_agendada', 'reagendamento_pendente']
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']))
+      );
       allow delete: if request.auth != null
         && resource.data.protetorId == request.auth.uid;
     }

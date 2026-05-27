@@ -84,7 +84,11 @@ abstract class _MyAdoptionsStore with Store {
     isProcessing = true;
     errorMessage = null;
     try {
-      await _adoptionRepository.cancelAdoptionByAdotante(adoption.id);
+      await _adoptionRepository.cancelAdoptionByAdotante(
+        adoptionId: adoption.id,
+        petId: adoption.petId,
+        currentAdoptionStatus: adoption.status,
+      );
       return true;
     } catch (e) {
       errorMessage = 'Não foi possível cancelar a solicitação: $e';

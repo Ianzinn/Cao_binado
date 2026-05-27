@@ -11,6 +11,7 @@ import '../../../../shared/widgets/app_bottom_nav_bar.dart';
 import '../../../../shared/widgets/app_top_bar.dart';
 import '../store/favorites_store.dart';
 import '../store/find_store.dart';
+import '../widgets/pet_filters_bottom_sheet.dart';
 
 class FindPage extends StatefulWidget {
   const FindPage({super.key});
@@ -39,6 +40,24 @@ class _FindPageState extends State<FindPage> {
     super.dispose();
   }
 
+  Future<void> _openFilters() async {
+    final result = await showModalBottomSheet<(String?, String?)>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => PetFiltersBottomSheet(
+        initialEspecie: _store.especieFilter,
+        initialPorte: _store.porteFilter,
+      ),
+    );
+    if (result == null) return;
+    final (especie, porte) = result;
+    _store.applyFilters(especie, porte);
+  }
+
   void _precacheImages() {
     if (_precached) return;
     _precached = true;
@@ -60,11 +79,13 @@ class _FindPageState extends State<FindPage> {
       appBar: AppDarkTopBar(title: 'Encontre seu amigo!'),
       body: Observer(
         builder: (_) {
+          final filterCount = _store.activeFilterCount;
+
+          Widget content;
           if (_store.isLoading && _store.pets.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (_store.errorMessage != null) {
-            return Padding(
+            content = const Center(child: CircularProgressIndicator());
+          } else if (_store.errorMessage != null) {
+            content = Padding(
               padding: const EdgeInsets.all(24),
               child: Center(
                 child: SingleChildScrollView(
@@ -79,56 +100,113 @@ class _FindPageState extends State<FindPage> {
                 ),
               ),
             );
-          }
-          if (_store.pets.isEmpty) {
+          } else if (_store.pets.isEmpty) {
             _precached = false;
-            return Center(
+            content = Center(
               child: Text(
-                'Nenhum pet disponível no momento.',
+                filterCount > 0
+                    ? 'Nenhum pet encontrado para os filtros selecionados.'
+                    : 'Nenhum pet disponível no momento.',
                 style: GoogleFonts.poppins(
                   fontSize: 15,
                   color: AppColors.textSecondary,
                 ),
+                textAlign: TextAlign.center,
               ),
             );
-          }
-          _precacheImages();
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: _store.pets.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (_, i) {
-              final pet = _store.pets[i];
-              return GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => context.push('/pet-details', extra: pet),
-                child: _FindPetCard(
-                  pet: pet,
-                  isAdopting: _store.isAdopting,
-                  favoritesStore: _favorites,
-                  onAdopt: () async {
-                    final result = await _store.requestAdoption(pet);
-                    if (!context.mounted) return;
-                    switch (result) {
-                      case RequestAdoptionResult.success:
-                        context.go('/adoption-success', extra: pet);
-                      case RequestAdoptionResult.duplicate:
-                      case RequestAdoptionResult.notLogged:
-                      case RequestAdoptionResult.error:
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              _store.adoptErrorMessage ??
-                                  'Não foi possível enviar a solicitação.',
+          } else {
+            _precacheImages();
+            content = ListView.separated(
+              padding: const EdgeInsets.all(16),
+              itemCount: _store.pets.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemBuilder: (_, i) {
+                final pet = _store.pets[i];
+                return GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => context.push('/pet-details', extra: pet),
+                  child: _FindPetCard(
+                    pet: pet,
+                    isAdopting: _store.isAdopting,
+                    favoritesStore: _favorites,
+                    onAdopt: () async {
+                      final result = await _store.requestAdoption(pet);
+                      if (!context.mounted) return;
+                      switch (result) {
+                        case RequestAdoptionResult.success:
+                          context.go('/adoption-success', extra: pet);
+                        case RequestAdoptionResult.duplicate:
+                        case RequestAdoptionResult.notLogged:
+                        case RequestAdoptionResult.error:
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                _store.adoptErrorMessage ??
+                                    'Não foi possível enviar a solicitação.',
+                              ),
+                              backgroundColor: Colors.redAccent,
                             ),
-                            backgroundColor: Colors.redAccent,
+                          );
+                      }
+                    },
+                  ),
+                );
+              },
+            );
+          }
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                child: GestureDetector(
+                  onTap: _openFilters,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: filterCount > 0
+                          ? AppColors.primary
+                          : AppColors.surface,
+                      borderRadius: BorderRadius.circular(99),
+                      border: Border.all(
+                        color: filterCount > 0
+                            ? AppColors.primary
+                            : AppColors.divider,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.filter_list_rounded,
+                          size: 16,
+                          color: filterCount > 0
+                              ? Colors.white
+                              : AppColors.textPrimary,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          filterCount > 0
+                              ? 'Filtros ($filterCount)'
+                              : 'Filtros',
+                          style: GoogleFonts.poppins(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: filterCount > 0
+                                ? Colors.white
+                                : AppColors.textPrimary,
                           ),
-                        );
-                    }
-                  },
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              );
-            },
+              ),
+              Expanded(child: content),
+            ],
           );
         },
       ),

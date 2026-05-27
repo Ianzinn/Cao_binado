@@ -19,6 +19,15 @@ abstract class _FindStore with Store {
 
   ObservableList<PetModel> get pets => _petStore.pets;
 
+  String? get especieFilter => _petStore.especieFilter;
+  String? get porteFilter => _petStore.porteFilter;
+  int get activeFilterCount =>
+      (_petStore.especieFilter != null ? 1 : 0) +
+      (_petStore.porteFilter != null ? 1 : 0);
+
+  void applyFilters(String? especie, String? porte) =>
+      _petStore.applyFilters(especie, porte);
+
   @observable
   bool isAdopting = false;
 
